@@ -11,40 +11,45 @@
             <img src="~/images/University-Logo.png" alt="site logo" class="logo-icon">
         </a>
     </div>
-    <div class="sidebar-menu-area">
-        <ul class="sidebar-menu" id="sidebar-menu">
-            <li class="button">
-                <a href="@Url.Action("Index", "Admin")">
-                    <iconify-icon icon="solar:home-smile-angle-outline" class="menu-icon"></iconify-icon>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-group-title">Management</li>
-            <li>
-                <a href="@Url.Action("Index", "Course")">
-                    <iconify-icon icon="heroicons:document" class="menu-icon"></iconify-icon>
-                    <span>Courses</span>
-                </a>
-            </li>
-            <li>
-                <a href="@Url.Action("Index", "Assignment")">
-                    <iconify-icon icon="solar:document-text-outline" class="menu-icon"></iconify-icon>
-                    <span>Assignments</span>
-                </a>
-            </li>
-            <li class="dropdown">
-                <a href="javascript:void(0)">
-                    <iconify-icon icon="mage:user" class="menu-icon"></iconify-icon>
-                    <span>Users</span>
-                </a>
-                <ul class="sidebar-submenu">
-                    <li>
-                        <a href="@Url.Action("Teachers", "User")">
-                            <iconify-icon icon="mage:user" class="menu-icon"></iconify-icon>
-                            <span>Teachers</span>
-                        </a>
-                    </li>
-                    <li>
+    @if (!User.IsInRole("Student"))
+    {
+        <div class="sidebar-menu-area">
+            <ul class="sidebar-menu" id="sidebar-menu">
+                <li class="button">
+                    <a href="@Url.Action("Index", "Admin")">
+                        <iconify-icon icon="solar:home-smile-angle-outline" class="menu-icon"></iconify-icon>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="sidebar-menu-group-title">Management</li>
+                <li>
+                    <a href="@Url.Action("Index", "Course")">
+                        <iconify-icon icon="heroicons:document" class="menu-icon"></iconify-icon>
+                        <span>Courses</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="@Url.Action("Index", "Assignment")">
+                        <iconify-icon icon="solar:document-text-outline" class="menu-icon"></iconify-icon>
+                        <span>Assignments</span>
+                    </a>
+                </li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)">
+                        <iconify-icon icon="mage:user" class="menu-icon"></iconify-icon>
+                        <span>Users</span>
+                    </a>
+                    <ul class="sidebar-submenu">
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li>
+                                <a href="@Url.Action("Teachers", "User")">
+                                    <iconify-icon icon="mage:user" class="menu-icon"></iconify-icon>
+                                    <span>Teachers</span>
+                                </a>
+                            </li>
+                        }
+                        <li>
                         <a href="@Url.Action("Students", "User")">
                             <iconify-icon icon="mage:user" class="menu-icon"></iconify-icon>
                             <span>Students</span>
@@ -106,4 +111,5 @@
             -->
         </ul>
     </div>
+    }
 </aside>

@@ -1,14 +1,14 @@
-﻿using AssignmentCore.Repositories;
+﻿using AssignmentCore.Models;
+using AssignmentCore.Repositories;
 using AssignmentCore.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace AssignmentCore.Controllers
 {
-    using AssignmentCore.Repositories;
-    using AssignmentCore.ViewModels;
-    using Microsoft.AspNetCore.Mvc;
-    using Microsoft.EntityFrameworkCore;
-
+    [Authorize(Roles = "Admin,Teacher")]
     public class AdminController : Controller
     {
         private readonly CourseRepository _courseRepository;
@@ -27,11 +27,37 @@ namespace AssignmentCore.Controllers
 
         public async Task<IActionResult> Index()
         {
-            ViewData["title"] = "Admin Dashboard";
-            ViewData["subTitle"] = "Genel Bakış";
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var role = User.FindFirst(ClaimTypes.Role)!.Value;
 
-            var courses = await _courseRepository.GetAllAsync();
-            var assignments = await _assignmentRepository.GetAllWithCourseAsync();
+            List<Course> courses;
+            List<Assignment> assignments;
+
+            if (role == "Admin")
+            {
+                courses = await _courseRepository.GetAllAsync();
+                assignments = await _assignmentRepository.GetAllWithCourseAsync();
+            }
+            else if (role == "Teacher")
+            {
+                courses = await _courseRepository.GetByTeacherAsync(userId);
+                assignments = (await _assignmentRepository.GetAllWithCourseAsync())
+                    .Where(a => a.CreatedByUserId == userId)
+                    .ToList();
+            }
+            else if (role == "Student")
+            {
+                courses = await _courseRepository.GetForStudentAsync(userId);
+                assignments = (await _assignmentRepository.GetAllWithCourseAsync())
+                    .Where(a => a.Course.Students.Any(cs => cs.StudentId == userId && cs.IsActive))
+                    .ToList();
+            }
+            else
+            {
+                courses = new List<Course>();
+                assignments = new List<Assignment>();
+            }
+
             var users = await _userRepository.GetAllAsync();
 
             var vm = new AdminDashboardViewModel
@@ -39,7 +65,8 @@ namespace AssignmentCore.Controllers
                 TotalCourses = courses.Count,
                 TotalAssignments = assignments.Count,
                 ActiveAssignments = assignments.Count(a => a.IsActive),
-                TotalUsers = users.Count,
+                TotalUsers = users.Count(u => u.IsActive),
+
                 LatestAssignments = assignments
                     .OrderByDescending(a => a.CreatedAt)
                     .Take(5)

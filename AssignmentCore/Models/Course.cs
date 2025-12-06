@@ -14,6 +14,10 @@ namespace AssignmentCore.Models
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        public int TeacherId { get; set; }
+        public User? Teacher { get; set; }
+
+        public ICollection<CourseStudent> Students { get; set; } = new List<CourseStudent>();
         public ICollection<Assignment> Assignments { get; set; } = new List<Assignment>();
     }
 }

@@ -311,43 +311,73 @@
                 -->
 
                 <div class="dropdown">
-                    <button class="d-flex justify-content-center align-items-center rounded-circle" type="button" data-bs-toggle="dropdown">
-                        <img src="~/admin/images/user.png" alt="image" class="w-40-px h-40-px object-fit-cover rounded-circle">
+                    @{
+                        var profilePathClaim = User.FindFirst("ProfileImagePath")?.Value;
+                        var defaultAvatar = Url.Content("~/images/profile/default-avatar.png");
+
+                        var avatarUrl = string.IsNullOrEmpty(profilePathClaim)
+                            ? defaultAvatar
+                            : Url.Content(profilePathClaim);
+                    }
+
+                    <button class="d-flex justify-content-center align-items-center rounded-circle"
+                            type="button"
+                            data-bs-toggle="dropdown">
+                        <img src="@avatarUrl"
+                             alt="image"
+                             class="w-40-px h-40-px object-fit-cover rounded-circle">
                     </button>
+
+
                     <div class="dropdown-menu to-top dropdown-menu-sm">
+
+                        <!-- USER HEADER -->
                         <div class="py-12 px-16 radius-8 bg-primary-50 mb-16 d-flex align-items-center justify-content-between gap-2">
                             <div>
-                                <h6 class="text-lg text-primary-light fw-semibold mb-2">Shaidul Islam</h6>
-                                <span class="text-secondary-light fw-medium text-sm">Admin</span>
+                                <h6 class="text-lg text-primary-light fw-semibold mb-2">
+                                    @User.FindFirst("FullName")?.Value
+                                </h6>
+                                <span class="text-secondary-light fw-medium text-sm">
+                                    @User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value
+                                </span>
                             </div>
-                            <button type="button" class="hover-text-danger">
+                            <button type="button" class="hover-text-danger" data-bs-dismiss="dropdown">
                                 <iconify-icon icon="radix-icons:cross-1" class="icon text-xl"></iconify-icon>
                             </button>
                         </div>
+
                         <ul class="to-top-list">
+
+                            <!-- PROFILE -->
                             <li>
-                                <a class="dropdown-item text-black px-0 py-8 hover-bg-transparent hover-text-primary d-flex align-items-center gap-3" @Url.Action("ViewProfile", "Users")">
-                                    <iconify-icon icon="solar:user-linear" class="icon text-xl"></iconify-icon> My Profile
+                                <a class="dropdown-item text-black px-0 py-8 hover-bg-transparent hover-text-primary d-flex align-items-center gap-3"
+                                   asp-controller="User"
+                                   asp-action="Profile">
+                                    <iconify-icon icon="solar:user-linear" class="icon text-xl"></iconify-icon>
+                                    My Profile
                                 </a>
                             </li>
+
+                            <!-- LOGOUT -->
                             <li>
-                                <a class="dropdown-item text-black px-0 py-8 hover-bg-transparent hover-text-primary d-flex align-items-center gap-3" href="@Url.Action("Email", "Home")">
-                                    <iconify-icon icon="tabler:message-check" class="icon text-xl"></iconify-icon> Inbox
-                                </a>
+                                <form asp-controller="Account"
+                                      asp-action="Logout"
+                                      method="post"
+                                      class="w-100">
+
+                                    <button type="submit"
+                                            class="dropdown-item text-danger px-0 py-8 hover-bg-transparent hover-text-danger d-flex align-items-center gap-3 w-100">
+                                        <iconify-icon icon="lucide:power" class="icon text-xl"></iconify-icon>
+                                        Log Out
+                                    </button>
+
+                                </form>
                             </li>
-                            <li>
-                                <a class="dropdown-item text-black px-0 py-8 hover-bg-transparent hover-text-primary d-flex align-items-center gap-3" href="@Url.Action("Company", "Settings")">
-                                    <iconify-icon icon="icon-park-outline:setting-two" class="icon text-xl"></iconify-icon> Setting
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item text-black px-0 py-8 hover-bg-transparent hover-text-danger d-flex align-items-center gap-3" href="javascript:void(0)">
-                                    <iconify-icon icon="lucide:power" class="icon text-xl"></iconify-icon> Log Out
-                                </a>
-                            </li>
+
                         </ul>
                     </div>
-                </div><!-- Profile dropdown end -->
+                </div>
+
             </div>
         </div>
     </div>

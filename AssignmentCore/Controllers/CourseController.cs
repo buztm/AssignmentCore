@@ -1,42 +1,94 @@
 ﻿using AssignmentCore.Models;
 using AssignmentCore.Repositories;
+using AssignmentCore.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Security.Claims;
 
 namespace AssignmentCore.Controllers
 {
+    [Authorize(Roles = "Admin,Teacher")]
     public class CourseController : Controller
     {
         private readonly CourseRepository _courseRepository;
+        private readonly UserRepository _userRepository;
 
-        public CourseController(CourseRepository courseRepository)
+        public CourseController(CourseRepository courseRepository, UserRepository userRepository)
         {
             _courseRepository = courseRepository;
+            _userRepository = userRepository;
         }
 
         public async Task<IActionResult> Index()
         {
-            ViewData["title"] = "Dersler";
-            ViewData["subTitle"] = "Ders Listesi";
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var role = User.FindFirst(ClaimTypes.Role)!.Value;
 
-            var courses = await _courseRepository.GetAllAsync();
+            List<Course> courses;
+
+            if (role == "Admin")
+            {
+                courses = await _courseRepository.GetAllAsync();
+            }
+            else if (role == "Teacher")
+            {
+                courses = await _courseRepository.GetByTeacherAsync(userId);
+            }
+            else if (role == "Student")
+            {
+                courses = await _courseRepository.GetForStudentAsync(userId);
+            }
+            else
+            {
+                courses = new List<Course>();
+            }
+
             return View(courses);
         }
 
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
             ViewData["title"] = "Add Course";
             ViewData["subTitle"] = "New Course";
-            return View();
+
+            if (User.IsInRole("Admin"))
+                await LoadTeachersAsync();
+
+            return View(new Course());
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(Course model)
+        public async Task<IActionResult> Create(Course course)
         {
-            if (!ModelState.IsValid)
-                return View(model);
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var role = User.FindFirst(ClaimTypes.Role)!.Value;
 
-            await _courseRepository.AddAsync(model);
+            if (role == "Teacher")
+            {
+                // Öğretmen kurs açıyorsa TeacherId’yi biz set ediyoruz
+                course.TeacherId = userId;
+                ModelState.Remove("TeacherId");  // formda alan olmadığı için
+            }
+
+            if (role == "Admin" && course.TeacherId == 0)
+            {
+                ModelState.AddModelError("TeacherId", "Please select a teacher.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                if (role == "Admin")
+                    await LoadTeachersAsync();
+
+                return View(course);
+            }
+
+            course.CreatedAt = DateTime.UtcNow;
+
+            await _courseRepository.AddAsync(course);
             await _courseRepository.SaveAsync();
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -44,12 +96,13 @@ namespace AssignmentCore.Controllers
         {
             var course = await _courseRepository.GetByIdAsync(id);
             if (course == null)
-            {
                 return NotFound();
-            }
 
             ViewData["title"] = "Edit Course";
             ViewData["subTitle"] = "Update Course";
+
+            if (User.IsInRole("Admin"))
+                await LoadTeachersAsync();
 
             return View(course);
         }
@@ -60,14 +113,40 @@ namespace AssignmentCore.Controllers
             if (id != model.Id)
                 return BadRequest();
 
-            if (!ModelState.IsValid)
-                return View(model);
+            var course = await _courseRepository.GetByIdAsync(id);
+            if (course == null)
+                return NotFound();
 
-            _courseRepository.Update(model);
+            if (!ModelState.IsValid)
+            {
+                if (User.IsInRole("Admin"))
+                    await LoadTeachersAsync();
+
+                return View(model);
+            }
+
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var role = User.FindFirst(ClaimTypes.Role)!.Value;
+
+            if (role != "Admin" && course.TeacherId != userId)
+                return Forbid();
+
+            course.Code = model.Code;
+            course.Name = model.Name;
+            course.Description = model.Description;
+            course.IsActive = model.IsActive;
+
+            if (role == "Admin")
+            {
+                course.TeacherId = model.TeacherId;
+            }
+
+            _courseRepository.Update(course);
             await _courseRepository.SaveAsync();
 
             return RedirectToAction(nameof(Index));
         }
+
 
         public async Task<IActionResult> Delete(int id)
         {
@@ -117,6 +196,95 @@ namespace AssignmentCore.Controllers
                 success = true,
                 isActive = course.IsActive
             });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> AssignStudents(int id)
+        {
+            var course = await _courseRepository.GetByIdWithStudentsAsync(id);
+            if (course == null) return NotFound();
+
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var role = User.FindFirst(ClaimTypes.Role)!.Value;
+
+            // sadece admin veya ilgili öğretmen atama yapabilsin
+            if (role != "Admin" && course.TeacherId != userId)
+                return Forbid();
+
+            var students = await _userRepository.GetActiveStudentsAsync();
+
+            var vm = new CourseAssignStudentsViewModel
+            {
+                CourseId = course.Id,
+                CourseName = course.Name,
+                SelectedStudentIds = course.Students
+                    .Where(cs => cs.IsActive)
+                    .Select(cs => cs.StudentId)
+                    .ToList(),
+                Students = students.Select(s => new SelectListItem
+                {
+                    Value = s.Id.ToString(),
+                    Text = $"{s.FullName} ({s.UserName})"
+                }).ToList()
+            };
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AssignStudents(CourseAssignStudentsViewModel model)
+        {
+            var course = await _courseRepository.GetByIdWithStudentsAsync(model.CourseId);
+            if (course == null) return NotFound();
+
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var role = User.FindFirst(ClaimTypes.Role)!.Value;
+
+            if (role != "Admin" && course.TeacherId != userId)
+                return Forbid();
+
+            // mevcut atamaları güncelle
+            var selectedIds = model.SelectedStudentIds?.ToHashSet() ?? new HashSet<int>();
+
+            // 1) seçili olmayanları pasif yap
+            foreach (var cs in course.Students)
+            {
+                cs.IsActive = selectedIds.Contains(cs.StudentId);
+            }
+
+            // 2) yeni seçilen ama tabloda olmayanları ekle
+            var existingIds = course.Students.Select(cs => cs.StudentId).ToHashSet();
+
+            foreach (var sid in selectedIds)
+            {
+                if (!existingIds.Contains(sid))
+                {
+                    course.Students.Add(new CourseStudent
+                    {
+                        CourseId = course.Id,
+                        StudentId = sid,
+                        IsActive = true
+                    });
+                }
+            }
+
+            await _courseRepository.SaveAsync();
+
+            TempData["AssignSuccess"] = "Students assigned successfully.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        private async Task LoadTeachersAsync()
+        {
+            var teachers = await _userRepository.GetActiveTeachersAsync();
+
+            ViewBag.Teachers = teachers
+                .Select(t => new SelectListItem
+                {
+                    Value = t.Id.ToString(),
+                    Text = $"{t.FullName} ({t.UserName})"
+                })
+                .ToList();
         }
     }
 }

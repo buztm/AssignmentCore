@@ -26,10 +26,20 @@
             <textarea asp-for="Description" class="form-control"></textarea>
         </div>
 
+        @if (User.IsInRole("Admin"))
+        {
+            <div class="mb-3">
+                <label class="form-label">Teacher</label>
+                <select asp-for="TeacherId" asp-items="ViewBag.Teachers" class="form-control">
+                    <option value="">Select Teacher</option>
+                </select>
+                <span asp-validation-for="TeacherId" class="text-danger text-sm"></span>
+            </div>
+        }
+
         <div class="mb-3 flex items-center gap-2">
             <input asp-for="IsActive" class="form-check-input" />
             <label asp-for="IsActive" class="form-check-label">Is Active</label>
-            <span></span>
         </div>
 
         <div class="flex justify-between">

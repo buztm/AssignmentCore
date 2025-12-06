@@ -5,31 +5,42 @@
     ViewData["subTitle"] = "New Course";
 }
 
-<!--<h3 class="bg-primary text-white rounded-4 text-center">Add Course</h3>-->   
 <div class="card p-3 w-50">
     <form asp-action="Create" method="post">
+        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
         <div class="mb-3">
             <label class="form-label">Course Code</label>
             <input asp-for="Code" class="form-control" />
             <span asp-validation-for="Code" class="text-danger text-sm"></span>
         </div>
+
         <div class="mb-3">
             <label class="form-label">Course Name</label>
             <input asp-for="Name" class="form-control" />
             <span asp-validation-for="Name" class="text-danger text-sm"></span>
         </div>
+
         <div class="mb-3">
             <label class="form-label">Description</label>
             <textarea asp-for="Description" class="form-control"></textarea>
-            <span></span>
         </div>
+
+        @if (User.IsInRole("Admin"))
+        {
+            <div class="mb-3">
+                <label class="form-label">Teacher</label>
+                <select asp-for="TeacherId" asp-items="ViewBag.Teachers" class="form-control">
+                    <option value="">Select Teacher</option>
+                </select>
+                <span asp-validation-for="TeacherId" class="text-danger text-sm"></span>
+            </div>
+        }
+
         <div class="mb-3 flex items-center gap-2">
             <input asp-for="IsActive" class="form-check-input" />
             <label asp-for="IsActive" class="form-check-label">Is Active</label>
-            <span></span>
         </div>
-
-        <!--<div asp-validation-summary="All" class="mb-3 text-white bg-danger rounded-2"></div>-->
 
         <button type="submit" class="btn btn-primary">Save</button>
         <a asp-action="Index" class="btn btn-secondary">Back</a>

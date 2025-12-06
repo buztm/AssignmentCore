@@ -1,0 +1,21 @@
+﻿@{
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    ViewData["title"] = "Access Denied";
+    ViewData["subTitle"] = "You do not have permission";
+}
+
+<div class="card p-50 w-50">
+    <h1 class="h1 text-danger mb-10 text-center">Access Denied</h1>
+    <span class="bg-danger rounded-3 p-3 mb-50 text-white">
+        You do not have permission to access this page.
+    </span>
+
+    @if (User.IsInRole("Student"))
+    {
+        <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-2">Back to Home</a>
+    }
+    else
+    {
+        <a asp-controller="Admin" asp-action="Index" class="btn btn-primary mt-2">Back to Dashboard</a>
+    }
+</div>

@@ -1,6 +1,7 @@
-using System.Diagnostics;
 using AssignmentCore.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace AssignmentCore.Controllers
 {

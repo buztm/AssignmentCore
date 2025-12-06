@@ -5,46 +5,85 @@
     ViewData["subTitle"] = "Overview";
 }
 
-<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-    <div class="card p-4">
-        <div class="text-sm text-gray-400">Toplam Ders</div>
-        <div class="text-3xl font-bold">@Model.TotalCourses</div>
+<div class="row g-4 mb-50 mt-50">
+
+    <!-- Total Courses -->
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="dash-stat card py-5 text-center">
+            <div class="stat-icon-large bg-primary-subtle text-primary mb-3">
+                <i class="bi bi-journal-bookmark"></i>
+            </div>
+            <div class="stat-value-large">@Model.TotalCourses</div>
+            <div class="stat-label-large">Total Courses</div>
+        </div>
     </div>
-    <div class="card p-4">
-        <div class="text-sm text-gray-400">Toplam Ödev</div>
-        <div class="text-3xl font-bold">@Model.TotalAssignments</div>
+
+    <!-- Total Assignments -->
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="dash-stat card py-5 text-center">
+            <div class="stat-icon-large bg-success-subtle text-success mb-3">
+                <i class="bi bi-pencil-square"></i>
+            </div>
+            <div class="stat-value-large">@Model.TotalAssignments</div>
+            <div class="stat-label-large">Total Assignments</div>
+        </div>
     </div>
-    <div class="card p-4">
-        <div class="text-sm text-gray-400">Aktif Ödev</div>
-        <div class="text-3xl font-bold">@Model.ActiveAssignments</div>
+
+    <!-- Active Assignments -->
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="dash-stat card py-5 text-center">
+            <div class="stat-icon-large bg-warning-subtle text-warning mb-3">
+                <i class="bi bi-check2-circle"></i>
+            </div>
+            <div class="stat-value-large">@Model.ActiveAssignments</div>
+            <div class="stat-label-large">Active Assignments</div>
+        </div>
     </div>
-    <div class="card p-4">
-        <div class="text-sm text-gray-400">Kullanıcı</div>
-        <div class="text-3xl font-bold">@Model.TotalUsers</div>
+
+    <!-- Total Users -->
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="dash-stat card py-5 text-center">
+            <div class="stat-icon-large bg-danger-subtle text-danger mb-3">
+                <i class="bi bi-people"></i>
+            </div>
+            <div class="stat-value-large">@Model.TotalUsers</div>
+            <div class="stat-label-large">Total Users</div>
+        </div>
     </div>
 </div>
 
+<!-- Latest assignments -->
 <div class="card p-4">
-    <h2 class="text-xl font-semibold mb-4">Son Eklenen Ödevler</h2>
-    <table class="table-auto w-full text-left">
-        <thead>
-            <tr>
-                <th>Ödev</th>
-                <th>Ders</th>
-                <th>Oluşturulma</th>
-                <th>Son Teslim</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var a in Model.LatestAssignments)
-            {
+    <h2 class="text-2xxl font-semibold mb-4 p-4">Latest Assignments</h2>
+
+    @if (Model.LatestAssignments == null || Model.LatestAssignments.Count == 0)
+    {
+        <div class="bg-warning rounded-3 p-3 text-black-50 text-xl">
+            There are no assignments yet.
+        </div>
+    }
+    else
+    {
+        <table class="striped-table rounded-4 bg-primary">
+            <thead>
                 <tr>
-                    <td>@a.Title</td>
-                    <td>@a.CourseName</td>
-                    <td>@a.CreatedAt.ToString("dd.MM.yyyy")</td>
-                    <td>@(a.DueDate?.ToString("dd.MM.yyyy") ?? "-")</td>
+                    <th class="text-white">Assignment</th>
+                    <th class="text-white">Course</th>
+                    <th class="text-white">Created At</th>
+                    <th class="text-white">Due Date</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var a in Model.LatestAssignments)
+                {
+                    <tr>
+                        <td class="py-2">@a.Title</td>
+                        <td>@a.CourseName</td>
+                        <td>@a.CreatedAt.ToString("dd.MM.yyyy")</td>
+                        <td>@(a.DueDate?.ToString("dd.MM.yyyy"))</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
 </div>

@@ -1,11 +1,14 @@
 ﻿using AssignmentCore.Models;
 using AssignmentCore.Repositories;
 using AssignmentCore.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Security.Claims;
 
 namespace AssignmentCore.Controllers
 {
+    [Authorize(Roles = "Admin,Teacher")]
     public class AssignmentController : Controller
     {
         private readonly AssignmentRepository _assignmentRepository;
@@ -55,18 +58,24 @@ namespace AssignmentCore.Controllers
             if (!ModelState.IsValid)
             {
                 var courses = await _courseRepository.GetAllAsync();
-                model.Courses = courses
-                    .Select(c => new SelectListItem
-                    {
-                        Value = c.Id.ToString(),
-                        Text = c.Name
-                    }).ToList();
+                model.Courses = courses.Select(c => new SelectListItem
+                {
+                    Value = c.Id.ToString(),
+                    Text = c.Name
+                }).ToList();
 
                 return View(model);
             }
 
-            // TODO: login sonrası aktif admin id'sini al
-            int adminId = 2; // şimdilik hardcode
+            // Giriş yapmış kullanıcının Id'si
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr))
+            {
+                // Teorik olarak buraya düşmemeli çünkü bu action Authorize altında olmalı
+                return Unauthorized();
+            }
+
+            var userId = int.Parse(userIdStr);
 
             var assignment = new Assignment
             {
@@ -74,8 +83,9 @@ namespace AssignmentCore.Controllers
                 Description = model.Description,
                 CourseId = model.CourseId,
                 DueDate = model.DueDate,
-                IsActive = model.IsActive,
-                CreatedByUserId = adminId
+                CreatedByUserId = userId,
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true
             };
 
             await _assignmentRepository.AddAsync(assignment);
@@ -83,6 +93,7 @@ namespace AssignmentCore.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+
 
         public async Task<IActionResult> Edit(int id)
         {

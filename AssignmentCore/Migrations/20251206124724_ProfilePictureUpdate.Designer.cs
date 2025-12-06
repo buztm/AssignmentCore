@@ -4,6 +4,7 @@ using AssignmentCore.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AssignmentCore.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251206124724_ProfilePictureUpdate")]
+    partial class ProfilePictureUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -86,43 +89,9 @@ namespace AssignmentCore.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("TeacherId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("TeacherId");
 
                     b.ToTable("Courses");
-                });
-
-            modelBuilder.Entity("AssignmentCore.Models.CourseStudent", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CourseId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("EnrolledAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("StudentId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CourseId");
-
-                    b.HasIndex("StudentId");
-
-                    b.ToTable("CourseStudents");
                 });
 
             modelBuilder.Entity("AssignmentCore.Models.User", b =>
@@ -180,7 +149,7 @@ namespace AssignmentCore.Migrations
                         .IsRequired();
 
                     b.HasOne("AssignmentCore.Models.User", "CreatedByUser")
-                        .WithMany("Assignments")
+                        .WithMany("CreatedAssignments")
                         .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -192,48 +161,12 @@ namespace AssignmentCore.Migrations
 
             modelBuilder.Entity("AssignmentCore.Models.Course", b =>
                 {
-                    b.HasOne("AssignmentCore.Models.User", "Teacher")
-                        .WithMany("CoursesTaught")
-                        .HasForeignKey("TeacherId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Teacher");
-                });
-
-            modelBuilder.Entity("AssignmentCore.Models.CourseStudent", b =>
-                {
-                    b.HasOne("AssignmentCore.Models.Course", "Course")
-                        .WithMany("Students")
-                        .HasForeignKey("CourseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AssignmentCore.Models.User", "Student")
-                        .WithMany("EnrolledCourses")
-                        .HasForeignKey("StudentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Course");
-
-                    b.Navigation("Student");
-                });
-
-            modelBuilder.Entity("AssignmentCore.Models.Course", b =>
-                {
                     b.Navigation("Assignments");
-
-                    b.Navigation("Students");
                 });
 
             modelBuilder.Entity("AssignmentCore.Models.User", b =>
                 {
-                    b.Navigation("Assignments");
-
-                    b.Navigation("CoursesTaught");
-
-                    b.Navigation("EnrolledCourses");
+                    b.Navigation("CreatedAssignments");
                 });
 #pragma warning restore 612, 618
         }
