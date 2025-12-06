@@ -1,0 +1,31 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<partial name="~/Views/Shared/Partials/_Head.cshtml" />
+
+<body>
+    <partial name="~/Views/Shared/Partials/_Sidebar.cshtml" />
+
+    <main class="dashboard-main">
+        <partial name="~/Views/Shared/Partials/_Navbar.cshtml" />
+
+        <div class="dashboard-main-body">
+            @{
+                string BreadcrumbTitle = ViewData.ContainsKey("title") ? ViewData["title"] as string ?? "" : "";
+                string BreadcrumbSubTitle = ViewData.ContainsKey("subTitle") ? ViewData["subTitle"] as string ?? "" : "";
+            }
+            <partial name="~/Views/Shared/Partials/_Breadcrumb.cshtml" view-data='new ViewDataDictionary(ViewData) {{ "BreadcrumbTitle", BreadcrumbTitle }, { "BreadcrumbSubTitle", BreadcrumbSubTitle }}' />
+            @RenderBody()
+        </div>
+
+        <partial name="~/Views/Shared/Partials/_Footer.cshtml" />
+    </main>
+    <partial name="~/Views/Shared/Partials/_Scripts.cshtml" />
+    
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

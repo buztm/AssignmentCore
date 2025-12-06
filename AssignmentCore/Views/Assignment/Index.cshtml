@@ -1,0 +1,118 @@
+﻿@model List<AssignmentCore.Models.Assignment>
+
+@{
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    ViewData["title"] = "Assignments";
+    ViewData["subTitle"] = "Assignment List";
+}
+
+<div class="card p-3">
+    <div class="flex justify-between mb-3">
+        <h2 class="text-xxl font-semibold mb-3">Assignment List</h2>
+        <a asp-action="Create" class="btn btn-primary">New Assignment</a>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="p-3 mb-3 bg-warning rounded text-black-50">
+            There is no assignment yet!
+        </div>
+    }
+
+    <table class="striped-table rounded-4 bg-primary">
+        <thead>
+            <tr>
+                <th class="text-white">Title</th>
+                <th class="text-white">Course</th>
+                <th class="text-white">Description</th>
+                <th class="text-white">Created At</th>
+                <th class="text-white">Due Date</th>
+                <th class="text-white">Is Active</th>
+                <th class="text-right text-white">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var a in Model)
+            {
+                <tr class="hover:bg-slate-700/30 transition">
+                    <td class="py-2">@a.Title</td>
+                    <td>@a.Course.Name</td>
+                    <td>
+                        @if (a.Description != null)
+                        {
+                            @a.Description
+                        }
+                        else
+                        {
+                            <span class="hover-text-info">Empty!</span>
+                        }
+                    </td>
+                    <td>@a.CreatedAt.ToString("dd.MM.yyyy")</td>
+                    <td>@(a.DueDate?.ToString("dd.MM.yyyy") ?? "-")</td>
+                    <td>
+                        <button type="button" class="btn btn-xs toggle-active-btn" data-id="@a.Id">
+                            <span class="badge @(a.IsActive ? "bg-success" : "bg-danger")">
+                                @(a.IsActive ? "Active" : "Inactive")
+                        </button>
+                    </td>
+                    <td class="text-right">
+                        <a asp-action="Edit" asp-route-id="@a.Id" class="btn btn-xs btn-primary me-2">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@a.Id" class="btn btn-xs btn-danger">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const buttons = document.querySelectorAll(".toggle-active-btn");
+
+            buttons.forEach(btn => {
+                btn.addEventListener("click", function (e) {
+                    e.preventDefault();
+
+                    const id = this.getAttribute("data-id");
+
+                    fetch(`/Assignment/ToggleActive?id=${id}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            console.error("Request failed", response.status);
+                            return null;
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!data || !data.success) {
+                            console.error("Toggle failed or no data");
+                            return;
+                        }
+
+                        const badge = this.querySelector(".badge");
+                        if (!badge) return;
+
+                        if (data.isActive) {
+                            badge.classList.remove("bg-danger");
+                            badge.classList.add("bg-success");
+                            badge.textContent = "Active";
+                        } else {
+                            badge.classList.remove("bg-success");
+                            badge.classList.add("bg-danger");
+                            badge.textContent = "Inactive";
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error in toggle call:", err);
+                    });
+                });
+            });
+        });
+    </script>
+}

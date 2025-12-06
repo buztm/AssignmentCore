@@ -1,0 +1,50 @@
+﻿@model AssignmentCore.ViewModels.AdminDashboardViewModel
+@{
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    ViewData["title"] = "Dashboard";
+    ViewData["subTitle"] = "Overview";
+}
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="card p-4">
+        <div class="text-sm text-gray-400">Toplam Ders</div>
+        <div class="text-3xl font-bold">@Model.TotalCourses</div>
+    </div>
+    <div class="card p-4">
+        <div class="text-sm text-gray-400">Toplam Ödev</div>
+        <div class="text-3xl font-bold">@Model.TotalAssignments</div>
+    </div>
+    <div class="card p-4">
+        <div class="text-sm text-gray-400">Aktif Ödev</div>
+        <div class="text-3xl font-bold">@Model.ActiveAssignments</div>
+    </div>
+    <div class="card p-4">
+        <div class="text-sm text-gray-400">Kullanıcı</div>
+        <div class="text-3xl font-bold">@Model.TotalUsers</div>
+    </div>
+</div>
+
+<div class="card p-4">
+    <h2 class="text-xl font-semibold mb-4">Son Eklenen Ödevler</h2>
+    <table class="table-auto w-full text-left">
+        <thead>
+            <tr>
+                <th>Ödev</th>
+                <th>Ders</th>
+                <th>Oluşturulma</th>
+                <th>Son Teslim</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var a in Model.LatestAssignments)
+            {
+                <tr>
+                    <td>@a.Title</td>
+                    <td>@a.CourseName</td>
+                    <td>@a.CreatedAt.ToString("dd.MM.yyyy")</td>
+                    <td>@(a.DueDate?.ToString("dd.MM.yyyy") ?? "-")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

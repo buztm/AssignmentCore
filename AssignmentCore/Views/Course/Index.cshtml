@@ -1,0 +1,114 @@
+﻿@model List<AssignmentCore.Models.Course>
+@{
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    ViewData["title"] = "Courses";
+    ViewData["subTitle"] = "Course List";
+}
+
+<div class="card p-3">
+    <div class="flex justify-between mb-3">
+        <h2 class="text-xxl font-semibold mb-3">Course List</h2>
+        <a asp-action="Create" class="btn btn-primary">New Course</a>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="p-3 mb-3 bg-warning rounded text-black-50">
+            There is no course yet!
+        </div>
+    }
+
+    <table class="striped-table rounded-4 bg-primary">
+        <thead>
+            <tr>
+                <th class="text-white">Course Code</th>
+                <th class="text-white">Name</th>
+                <th class="text-white">Description</th>
+                <th class="text-white">Is Active</th>
+                <th class="text-right text-white">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in Model)
+            {
+                <tr>
+                    <td>@c.Code</td>
+                    <td>@c.Name</td>
+                    <td>
+                        @if (c.Description != null)
+                        {
+                            @c.Description
+                        }
+                        else
+                        {
+                            <span class="hover-text-info">Empty!</span>
+                        }
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-xs toggle-active-btn" data-id="@c.Id">
+                            <span class="badge @(c.IsActive ? "bg-success" : "bg-danger")">
+                                @(c.IsActive ? "Active" : "Inactive")
+                        </button>
+                    </td>
+
+                    <td class="text-right">
+                        <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-primary">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@c.Id" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const buttons = document.querySelectorAll(".toggle-active-btn");
+
+            buttons.forEach(btn => {
+                btn.addEventListener("click", function (e) {
+                    e.preventDefault();
+
+                    const id = this.getAttribute("data-id");
+
+                    fetch(`/Course/ToggleActive?id=${id}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            console.error("Request failed", response.status);
+                            return null;
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!data || !data.success) {
+                            console.error("Toggle failed or no data");
+                            return;
+                        }
+
+                        const badge = this.querySelector(".badge");
+                        if (!badge) return;
+
+                        if (data.isActive) {
+                            badge.classList.remove("bg-danger");
+                            badge.classList.add("bg-success");
+                            badge.textContent = "Active";
+                        } else {
+                            badge.classList.remove("bg-success");
+                            badge.classList.add("bg-danger");
+                            badge.textContent = "Inactive";
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error in toggle call:", err);
+                    });
+                });
+            });
+        });
+    </script>
+}

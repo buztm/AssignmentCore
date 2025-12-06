@@ -1,0 +1,40 @@
+﻿@model AssignmentCore.Models.Course
+@{
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    ViewData["title"] = "Edit Course";
+    ViewData["subTitle"] = "Update Course";
+}
+
+<div class="card p-3 w-50">
+    <form asp-action="Edit" method="post">
+        <input type="hidden" asp-for="Id" />
+
+        <div class="mb-3">
+            <label class="form-label">Course Code</label>
+            <input asp-for="Code" class="form-control mb-1" />
+            <span asp-validation-for="Code" class="text-danger text-sm block mt-1"></span>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Course Name</label>
+            <input asp-for="Name" class="form-control mb-1" />
+            <span asp-validation-for="Name" class="text-danger text-sm block mt-1"></span>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea asp-for="Description" class="form-control"></textarea>
+        </div>
+
+        <div class="mb-3 flex items-center gap-2">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label asp-for="IsActive" class="form-check-label">Is Active</label>
+            <span></span>
+        </div>
+
+        <div class="flex justify-between">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a asp-action="Index" class="btn btn-secondary">Back</a>
+        </div>
+    </form>
+</div>
