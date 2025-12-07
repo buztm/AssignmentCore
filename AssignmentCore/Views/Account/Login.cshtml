@@ -12,9 +12,8 @@
         </div>
     </div>
 
-    <div class="auth-right py-32 px-24 d-flex flex-column justify-content-center">
+    <div class="auth-right py-32 px-24 d-flex flex-column justify-content-right">
         <div class="max-w-464-px mx-auto w-100">
-
             <div class="mb-4">
                 <a asp-controller="Home" asp-action="Index" class="mb-40 max-w-290-px d-inline-block">
                     <img src="~/images/University-Logo.png" alt="">
@@ -24,7 +23,7 @@
             </div>
 
             <!-- VALIDATION -->
-            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+            
 
             <!-- FORM -->
             <form asp-action="Login" asp-controller="Account" method="post">
@@ -32,15 +31,15 @@
 
                 <!-- USERNAME / EMAIL -->
                 <div class="position-relative mb-20">
-
-                <div class="icon-field mb-16">
-                    <span class="icon top-50 translate-middle-y">
-                        <iconify-icon icon="mage:email"></iconify-icon>
-                    </span>
-                    <input asp-for="UserNameOrEmail"
-                           class="form-control h-56-px bg-neutral-50 radius-12"
-                           placeholder="User Name or Email" />
-                        <span asp-validation-for="UserNameOrEmail" class="text-danger text-sm d-block mt-1"></span>
+                    <div class="icon-field">
+                        <span class="icon top-50 translate-middle-y">
+                            <iconify-icon icon="mage:email"></iconify-icon>
+                        </span>
+                        <input asp-for="UserNameOrEmail"
+                               class="form-control h-56-px bg-neutral-50 radius-12"
+                               placeholder="User Name or Email" />
+                    </div>
+                    <span asp-validation-for="UserNameOrEmail" class="text-danger text-sm d-block mt-1"></span>
                 </div>
 
                 <!-- PASSWORD -->
@@ -68,7 +67,7 @@
                                id="rememberMe" />
                         <label asp-for="RememberMe" class="form-check-label ms-1"></label>
                     </div>
-                    <a href="javascript:void(0)" class="text-primary-600 fw-medium">Forgot Password?</a>
+                    <!--<a href="javascript:void(0)" class="text-primary-600 fw-medium">Forgot Password?</a>-->
                 </div>
 
                 <!-- SUBMIT -->

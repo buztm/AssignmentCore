@@ -25,7 +25,6 @@
                 <th class="text-white">Title</th>
                 <th class="text-white">Course</th>
                 <th class="text-white">Description</th>
-                <th class="text-white">Created At</th>
                 <th class="text-white">Due Date</th>
                 <th class="text-white">Is Active</th>
                 @if (!User.IsInRole("Student")) { <th class="text-right text-white">Actions</th> }
@@ -49,7 +48,6 @@
                             <span>Empty!</span>
                         }
                     </td>
-                    <td>@a.CreatedAt.ToString("dd.MM.yyyy")</td>
                     <td>@(a.DueDate?.ToString("dd.MM.yyyy") ?? "-")</td>
                     <td>
                         @if (User.IsInRole("Student"))
