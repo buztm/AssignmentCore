@@ -27,10 +27,12 @@ namespace AssignmentCore.Repositories
 
         public async Task<List<User>> GetActiveTeachersAsync()
         {
-            return await _dbSet
-                .Where(u => u.Role == "Teacher" && u.IsActive)
-                .ToListAsync();
+            return await _dbSet.Where(u => u.Role == "Teacher" && u.IsActive).ToListAsync();
         }
 
+        public async Task<List<User>> GetActiveAdminAndTeacherAsync()
+        {
+            return await _dbSet.Where(u => u.Role == "Admin" && u.IsActive || u.Role == "Teacher" && u.IsActive).ToListAsync();
+        }
     }
 }

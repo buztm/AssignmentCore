@@ -12,10 +12,17 @@ public class CourseRepository : GenericRepository<Course>
         _context = context;
     }
 
+    public Task<List<Course>> GetAllWithTeacherAsync()
+    {
+        return _dbSet
+            .Include(c => c.Teacher)   // önemli kısım
+            .ToListAsync();
+    }
+
     public Task<List<Course>> GetByTeacherAsync(int teacherId)
     {
         return _dbSet
-            .Where(c => c.TeacherId == teacherId && c.IsActive)
+            .Where(c => c.TeacherId == teacherId)
             .ToListAsync();
     }
 
@@ -32,9 +39,11 @@ public class CourseRepository : GenericRepository<Course>
 
     public Task<Course?> GetByIdWithStudentsAsync(int id)
     {
-        return _dbSet
-            .Include(c => c.Students)
-                .ThenInclude(cs => cs.Student)
-            .FirstOrDefaultAsync(c => c.Id == id);
+        return _dbSet.Include(c => c.Students).ThenInclude(cs => cs.Student).FirstOrDefaultAsync(c => c.Id == id);
+    }
+
+    public async Task<Course?> GetByIdWithStudentsAndAssignmentsAsync(int id)
+    {
+        return await _context.Courses.Include(c => c.Students).Include(c => c.Assignments).FirstOrDefaultAsync(c => c.Id == id);
     }
 }

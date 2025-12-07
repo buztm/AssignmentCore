@@ -9,7 +9,7 @@
 <div class="card p-3">
     <div class="flex justify-between mb-3">
         <h2 class="text-xxl font-semibold mb-3">Assignment List</h2>
-        <a asp-action="Create" class="btn btn-primary">New Assignment</a>
+        @if (!User.IsInRole("Student")) { <a asp-action="Create" class="btn btn-primary">New Assignment</a> }
     </div>
 
     @if (Model.Count == 0)
@@ -28,7 +28,7 @@
                 <th class="text-white">Created At</th>
                 <th class="text-white">Due Date</th>
                 <th class="text-white">Is Active</th>
-                <th class="text-right text-white">Actions</th>
+                @if (!User.IsInRole("Student")) { <th class="text-right text-white">Actions</th> }
             </tr>
         </thead>
         <tbody>
@@ -36,7 +36,9 @@
             {
                 <tr class="hover:bg-slate-700/30 transition">
                     <td class="py-2">@a.Title</td>
-                    <td>@a.Course.Name</td>
+                    <td>
+                        <a class="hover-text-info" href="~/Course">@a.Course.Name</a>
+                    </td>
                     <td>
                         @if (a.Description != null)
                         {
@@ -44,21 +46,32 @@
                         }
                         else
                         {
-                            <span class="hover-text-info">Empty!</span>
+                            <span>Empty!</span>
                         }
                     </td>
                     <td>@a.CreatedAt.ToString("dd.MM.yyyy")</td>
                     <td>@(a.DueDate?.ToString("dd.MM.yyyy") ?? "-")</td>
                     <td>
-                        <button type="button" class="btn btn-xs toggle-active-btn" data-id="@a.Id">
+                        @if (User.IsInRole("Student"))
+                        {
+                            <span class="badge @(a.IsActive ? "bg-success" : "bg-danger")">@(a.IsActive ? "Active" : "Inactive")</span>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-xs toggle-active-btn" data-id="@a.Id">
                             <span class="badge @(a.IsActive ? "bg-success" : "bg-danger")">
                                 @(a.IsActive ? "Active" : "Inactive")
-                        </button>
+                            </button>
+                        }
                     </td>
-                    <td class="text-right">
-                        <a asp-action="Edit" asp-route-id="@a.Id" class="btn btn-xs btn-primary me-2">Edit</a>
-                        <a asp-action="Delete" asp-route-id="@a.Id" class="btn btn-xs btn-danger">Delete</a>
-                    </td>
+
+                    @if (!User.IsInRole("Student"))
+                    {
+                        <td class="text-right">
+                            <a asp-action="Edit" asp-route-id="@a.Id" class="btn btn-xs btn-primary me-2">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@a.Id" class="btn btn-xs btn-danger">Delete</a>
+                        </td>
+                    }
                 </tr>
             }
         </tbody>

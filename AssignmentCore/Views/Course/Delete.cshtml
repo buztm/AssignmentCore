@@ -39,7 +39,29 @@
     <form asp-action="Delete" method="post">
         <input type="hidden" asp-for="Id" />
         <div class="flex justify-between">
-            <button type="submit" class="btn btn-danger">Delete</button>
+            @if (ViewBag.HasAssignments || ViewBag.HasStudents)
+            {
+                <div class="alert alert-warning">
+                    There is
+                    @if (ViewBag.HasAssignments)
+                    {
+                        <text>assignments</text>
+                    }
+                    @if (ViewBag.HasAssignments && ViewBag.HasStudents)
+                    {
+                        <text> and </text>
+                    }
+                    @if (ViewBag.HasStudents)
+                    {
+                        <text>students</text>
+                    }
+                    under this course, you can't delete it!.
+                </div>
+            }
+            else
+            {
+                <button type="submit" class="btn btn-danger">Delete</button>
+            }
             <a asp-action="Index" class="btn btn-secondary">Cancel</a>
         </div>
     </form>

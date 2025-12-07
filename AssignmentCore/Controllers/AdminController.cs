@@ -8,7 +8,7 @@ using System.Security.Claims;
 
 namespace AssignmentCore.Controllers
 {
-    [Authorize(Roles = "Admin,Teacher")]
+    [Authorize]
     public class AdminController : Controller
     {
         private readonly CourseRepository _courseRepository;
@@ -27,57 +27,88 @@ namespace AssignmentCore.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var role = User.FindFirst(ClaimTypes.Role)!.Value;
+            var vm = new AdminDashboardViewModel();
 
-            List<Course> courses;
-            List<Assignment> assignments;
+            var role = User.FindFirst(ClaimTypes.Role)!.Value;
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             if (role == "Admin")
             {
-                courses = await _courseRepository.GetAllAsync();
-                assignments = await _assignmentRepository.GetAllWithCourseAsync();
+                // Courses
+                var allCourses = await _courseRepository.GetAllAsync();
+                vm.TotalCourses = allCourses.Count;
+
+                // Assignments
+                vm.TotalAssignments = await _assignmentRepository.CountAsync();
+                vm.ActiveAssignments = await _assignmentRepository.CountActiveAsync();
+
+                // Users
+                var allUsers = await _userRepository.GetAllAsync();
+                vm.TotalUsers = allUsers.Count;
+
+                // Latest assignments
+                var latest = await _assignmentRepository.GetLatestWithCourseAsync(5);
+                vm.LatestAssignments = latest.Select(a => new AdminDashboardAssignmentItem
+                {
+                    Title = a.Title,
+                    CourseName = a.Course?.Name ?? "-",
+                    CreatedAt = a.CreatedAt,
+                    DueDate = a.DueDate
+                }).ToList();
             }
             else if (role == "Teacher")
             {
-                courses = await _courseRepository.GetByTeacherAsync(userId);
-                assignments = (await _assignmentRepository.GetAllWithCourseAsync())
-                    .Where(a => a.CreatedByUserId == userId)
-                    .ToList();
+                // Bu öğretmenin dersleri
+                var teacherCourses = await _courseRepository.GetByTeacherAsync(userId);
+                vm.TotalCourses = teacherCourses.Count;
+
+                // Assignments
+                vm.TotalAssignments = await _assignmentRepository.CountByTeacherAsync(userId);
+                vm.ActiveAssignments = await _assignmentRepository.CountActiveByTeacherAsync(userId);
+
+                // TotalUsers: istersen 0 bırak, istersen tüm öğrencileri say
+                vm.TotalUsers = 0;
+
+                // Latest assignments (sadece kendi derslerinden)
+                var latest = await _assignmentRepository.GetLatestForTeacherAsync(userId, 5);
+                vm.LatestAssignments = latest.Select(a => new AdminDashboardAssignmentItem
+                {
+                    Title = a.Title,
+                    CourseName = a.Course?.Name ?? "-",
+                    CreatedAt = a.CreatedAt,
+                    DueDate = a.DueDate
+                }).ToList();
             }
             else if (role == "Student")
             {
-                courses = await _courseRepository.GetForStudentAsync(userId);
-                assignments = (await _assignmentRepository.GetAllWithCourseAsync())
-                    .Where(a => a.Course.Students.Any(cs => cs.StudentId == userId && cs.IsActive))
-                    .ToList();
+                // Öğrencinin atandığı kurslar
+                var studentCourses = await _courseRepository.GetForStudentAsync(userId);
+                vm.TotalCourses = studentCourses.Count;
+
+                // Öğrenciye ait ödev sayıları
+                vm.TotalAssignments = await _assignmentRepository.CountForStudentAsync(userId);
+                vm.ActiveAssignments = await _assignmentRepository.CountActiveForStudentAsync(userId);
+
+                vm.TotalUsers = 0; // öğrenci için istersen göstermeyebilirsin
+
+                // Latest assignments: işte burası senin istediğin kısım
+                var latest = await _assignmentRepository.GetLatestForStudentAsync(userId, 5);
+                vm.LatestAssignments = latest.Select(a => new AdminDashboardAssignmentItem
+                {
+                    Title = a.Title,
+                    CourseName = a.Course?.Name ?? "-",
+                    CreatedAt = a.CreatedAt,
+                    DueDate = a.DueDate
+                }).ToList();
             }
             else
             {
-                courses = new List<Course>();
-                assignments = new List<Assignment>();
+                // rol tanımsızsa boş dashboard
+                vm.TotalCourses = 0;
+                vm.TotalAssignments = 0;
+                vm.ActiveAssignments = 0;
+                vm.TotalUsers = 0;
             }
-
-            var users = await _userRepository.GetAllAsync();
-
-            var vm = new AdminDashboardViewModel
-            {
-                TotalCourses = courses.Count,
-                TotalAssignments = assignments.Count,
-                ActiveAssignments = assignments.Count(a => a.IsActive),
-                TotalUsers = users.Count(u => u.IsActive),
-
-                LatestAssignments = assignments
-                    .OrderByDescending(a => a.CreatedAt)
-                    .Take(5)
-                    .Select(a => new AdminDashboardAssignmentItem
-                    {
-                        Title = a.Title,
-                        CourseName = a.Course.Name,
-                        CreatedAt = a.CreatedAt,
-                        DueDate = a.DueDate
-                    }).ToList()
-            };
 
             return View(vm);
         }

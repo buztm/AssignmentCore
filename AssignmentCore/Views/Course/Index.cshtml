@@ -8,7 +8,7 @@
 <div class="card p-3">
     <div class="flex justify-between mb-3">
         <h2 class="text-xxl font-semibold mb-3">Course List</h2>
-        <a asp-action="Create" class="btn btn-primary">New Course</a>
+        @if (!User.IsInRole("Student")) { <a asp-action = "Create" class="btn btn-primary">New Course</a> }
     </div>
 
     @if (Model.Count == 0)
@@ -25,7 +25,8 @@
                 <th class="text-white">Name</th>
                 <th class="text-white">Description</th>
                 <th class="text-white">Is Active</th>
-                <th class="text-right text-white">Actions</th>
+                @if (User.IsInRole("Admin")) { <th class="text-right text-white">Teacher</th> }
+                @if(!User.IsInRole("Student")) { <th class="text-right text-white">Actions</th> }
             </tr>
         </thead>
         <tbody>
@@ -41,21 +42,38 @@
                         }
                         else
                         {
-                            <span class="hover-text-info">Empty!</span>
+                            <span>Empty!</span>
                         }
                     </td>
                     <td>
-                        <button type="button" class="btn btn-xs toggle-active-btn" data-id="@c.Id">
-                            <span class="badge @(c.IsActive ? "bg-success" : "bg-danger")">
-                                @(c.IsActive ? "Active" : "Inactive")
-                        </button>
+                        @if(User.IsInRole("Student"))
+                        {
+                            <span class="badge @(c.IsActive ? "bg-success" : "bg-danger")">@(c.IsActive ? "Active" : "Inactive")</span>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-xs toggle-active-btn" data-id="@c.Id">
+                                <span class="badge @(c.IsActive ? "bg-success" : "bg-danger")">
+                                    @(c.IsActive ? "Active" : "Inactive")
+                            </button>
+                        }
                     </td>
 
-                    <td class="text-right">
-                        <a asp-action="AssignStudents" asp-route-id="@c.Id" class="btn btn-sm btn-outline-info">Students</a>
-                        <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-primary">Edit</a>
-                        <a asp-action="Delete" asp-route-id="@c.Id" class="btn btn-sm btn-danger">Delete</a>
-                    </td>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <td>
+                            <a class="hover-text-info" href="@Url.Action("Teachers", "User")">@c.Teacher.FullName</a>
+                        </td>
+                    }
+                    
+                    @if (!User.IsInRole("Student"))
+                    {
+                        <td class="text-right">
+                            <a asp-action="AssignStudents" asp-route-id="@c.Id" class="btn btn-sm btn-outline-info">Students</a>
+                            <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-primary">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@c.Id" class="btn btn-sm btn-danger">Delete</a>
+                        </td>
+                    }
                 </tr>
             }
         </tbody>

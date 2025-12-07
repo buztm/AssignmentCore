@@ -8,7 +8,7 @@ using System.Security.Claims;
 
 namespace AssignmentCore.Controllers
 {
-    [Authorize(Roles = "Admin,Teacher")]
+    [Authorize]
     public class CourseController : Controller
     {
         private readonly CourseRepository _courseRepository;
@@ -29,7 +29,7 @@ namespace AssignmentCore.Controllers
 
             if (role == "Admin")
             {
-                courses = await _courseRepository.GetAllAsync();
+                courses = await _courseRepository.GetAllWithTeacherAsync();
             }
             else if (role == "Teacher")
             {
@@ -47,6 +47,7 @@ namespace AssignmentCore.Controllers
             return View(courses);
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> Create()
         {
             ViewData["title"] = "Add Course";
@@ -58,6 +59,7 @@ namespace AssignmentCore.Controllers
             return View(new Course());
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         [HttpPost]
         public async Task<IActionResult> Create(Course course)
         {
@@ -92,6 +94,7 @@ namespace AssignmentCore.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> Edit(int id)
         {
             var course = await _courseRepository.GetByIdAsync(id);
@@ -107,6 +110,7 @@ namespace AssignmentCore.Controllers
             return View(course);
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         [HttpPost]
         public async Task<IActionResult> Edit(int id, Course model)
         {
@@ -147,10 +151,10 @@ namespace AssignmentCore.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-
+        [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> Delete(int id)
         {
-            var course = await _courseRepository.GetByIdAsync(id);
+            var course = await _courseRepository.GetByIdWithStudentsAndAssignmentsAsync(id);
             if (course == null)
             {
                 return NotFound();
@@ -159,9 +163,13 @@ namespace AssignmentCore.Controllers
             ViewData["title"] = "Delete Course";
             ViewData["subTitle"] = "Confirm Delete";
 
+            ViewBag.HasAssignments = course.Assignments.Any();
+            ViewBag.HasStudents = course.Students.Any(cs => cs.IsActive);
+
             return View(course);
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         [HttpPost, ActionName("Delete")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
@@ -177,6 +185,7 @@ namespace AssignmentCore.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         [HttpPost]
         public async Task<IActionResult> ToggleActive(int id)
         {
@@ -198,6 +207,7 @@ namespace AssignmentCore.Controllers
             });
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         [HttpGet]
         public async Task<IActionResult> AssignStudents(int id)
         {
@@ -231,6 +241,7 @@ namespace AssignmentCore.Controllers
             return View(vm);
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         [HttpPost]
         public async Task<IActionResult> AssignStudents(CourseAssignStudentsViewModel model)
         {
@@ -276,15 +287,13 @@ namespace AssignmentCore.Controllers
 
         private async Task LoadTeachersAsync()
         {
-            var teachers = await _userRepository.GetActiveTeachersAsync();
+            var teachers = await _userRepository.GetActiveAdminAndTeacherAsync();
 
-            ViewBag.Teachers = teachers
-                .Select(t => new SelectListItem
-                {
-                    Value = t.Id.ToString(),
-                    Text = $"{t.FullName} ({t.UserName})"
-                })
-                .ToList();
+            ViewBag.Teachers = teachers.Select(t => new SelectListItem
+            {
+                Value = t.Id.ToString(),
+                Text = $"{t.FullName} ({t.UserName})"
+            }).ToList();
         }
     }
 }

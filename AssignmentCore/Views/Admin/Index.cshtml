@@ -5,51 +5,65 @@
     ViewData["subTitle"] = "Overview";
 }
 
-<div class="row g-4 mb-50 mt-50">
+<div class="row g-4 mb-50 mt-50 justify-content-center">
 
     <!-- Total Courses -->
+    
     <div class="col-12 col-md-6 col-xl-3">
         <div class="dash-stat card py-5 text-center">
-            <div class="stat-icon-large bg-primary-subtle text-primary mb-3">
-                <i class="bi bi-journal-bookmark"></i>
-            </div>
-            <div class="stat-value-large">@Model.TotalCourses</div>
-            <div class="stat-label-large">Total Courses</div>
+            <a href="/Course">
+                <div class="stat-icon-large bg-primary-subtle text-primary mb-3">
+                    <i class="bi bi-journal-bookmark"></i>
+                </div>
+                <div class="stat-value-large">@Model.TotalCourses</div>
+                <div class="stat-label-large">Total Courses</div>
+            </a>
         </div>
     </div>
 
     <!-- Total Assignments -->
+    
     <div class="col-12 col-md-6 col-xl-3">
         <div class="dash-stat card py-5 text-center">
-            <div class="stat-icon-large bg-success-subtle text-success mb-3">
-                <i class="bi bi-pencil-square"></i>
-            </div>
-            <div class="stat-value-large">@Model.TotalAssignments</div>
-            <div class="stat-label-large">Total Assignments</div>
+            <a href="/Assignment">
+                <div class="stat-icon-large bg-success-subtle text-success mb-3">
+                    <i class="bi bi-pencil-square"></i>
+                </div>
+                <div class="stat-value-large">@Model.TotalAssignments</div>
+                <div class="stat-label-large">Total Assignments</div>
+            </a>
         </div>
     </div>
+    
 
     <!-- Active Assignments -->
     <div class="col-12 col-md-6 col-xl-3">
         <div class="dash-stat card py-5 text-center">
-            <div class="stat-icon-large bg-warning-subtle text-warning mb-3">
-                <i class="bi bi-check2-circle"></i>
-            </div>
-            <div class="stat-value-large">@Model.ActiveAssignments</div>
-            <div class="stat-label-large">Active Assignments</div>
+            <a href="/Assignment">
+                <div class="stat-icon-large bg-warning-subtle text-warning mb-3">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+                <div class="stat-value-large">@Model.ActiveAssignments</div>
+                <div class="stat-label-large">Active Assignments</div>
+            </a>
         </div>
     </div>
 
-    <!-- Total Users -->
-    <div class="col-12 col-md-6 col-xl-3">
-        <div class="dash-stat card py-5 text-center">
-            <div class="stat-icon-large bg-danger-subtle text-danger mb-3">
-                <i class="bi bi-people"></i>
+    @if(User.IsInRole("Admin"))
+    {
+        <!-- Total Users -->
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="dash-stat card py-5 text-center">
+                <a href="@Url.Action("Students","User")">
+                    <div class="stat-icon-large bg-danger-subtle text-danger mb-3">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <div class="stat-value-large">@Model.TotalUsers</div>
+                    <div class="stat-label-large">Total Users</div>
+                </a>
             </div>
-            <div class="stat-value-large">@Model.TotalUsers</div>
-            <div class="stat-label-large">Total Users</div>
         </div>
-    </div>
+    }
 </div>
 
 <!-- Latest assignments -->

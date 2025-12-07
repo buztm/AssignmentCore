@@ -8,7 +8,7 @@ using System.Security.Claims;
 
 namespace AssignmentCore.Controllers
 {
-    [Authorize(Roles = "Admin,Teacher")]
+    [Authorize]
     public class AssignmentController : Controller
     {
         private readonly AssignmentRepository _assignmentRepository;
@@ -30,34 +30,85 @@ namespace AssignmentCore.Controllers
             ViewData["title"] = "Assignments";
             ViewData["subTitle"] = "Assignment List";
 
-            var assignments = await _assignmentRepository.GetAllWithCourseAsync();
+            var role = User.FindFirst(ClaimTypes.Role)!.Value;
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            List<Assignment> assignments;
+
+            if (role == "Admin")
+            {
+                assignments = await _assignmentRepository.GetAllWithCourseAsync();
+            }
+            else if (role == "Teacher")
+            {
+                assignments = await _assignmentRepository.GetForTeacherWithCourseAsync(userId);
+            }
+            else if (role == "Student")
+            {
+                assignments = await _assignmentRepository.GetForStudentWithCourseAsync(userId);
+            }
+            else
+            {
+                assignments = new List<Assignment>();
+            }
+
             return View(assignments);
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> Create()
         {
             ViewData["title"] = "Add Assignment";
             ViewData["subTitle"] = "New Assignment";
 
             var vm = new AssignmentCreateViewModel();
-            var courses = await _courseRepository.GetAllAsync();
 
-            vm.Courses = courses
-                .Select(c => new SelectListItem
-                {
-                    Value = c.Id.ToString(),
-                    Text = c.Name
-                }).ToList();
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var role = User.FindFirst(ClaimTypes.Role)!.Value;
+
+            List<Course> courses;
+
+            if (role == "Admin")
+            {
+                courses = await _courseRepository.GetAllAsync();
+            }
+            else
+            {
+                courses = await _courseRepository.GetByTeacherAsync(userId);
+            }
+
+            vm.Courses = courses.Select(c => new SelectListItem
+            {
+                Value = c.Id.ToString(),
+                Text = c.Name
+            }).ToList();
 
             return View(vm);
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         [HttpPost]
         public async Task<IActionResult> Create(AssignmentCreateViewModel model)
         {
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr))
+                return Unauthorized();
+
+            var userId = int.Parse(userIdStr);
+            var role = User.FindFirst(ClaimTypes.Role)!.Value;
+
+            List<Course> courses;
+            if (role == "Admin")
+            {
+                courses = await _courseRepository.GetAllAsync();
+            }
+            else
+            {
+                courses = await _courseRepository.GetByTeacherAsync(userId);
+            }
+
             if (!ModelState.IsValid)
             {
-                var courses = await _courseRepository.GetAllAsync();
                 model.Courses = courses.Select(c => new SelectListItem
                 {
                     Value = c.Id.ToString(),
@@ -67,15 +118,14 @@ namespace AssignmentCore.Controllers
                 return View(model);
             }
 
-            // Giriş yapmış kullanıcının Id'si
-            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdStr))
+            if (role == "Teacher")
             {
-                // Teorik olarak buraya düşmemeli çünkü bu action Authorize altında olmalı
-                return Unauthorized();
+                var canUseCourse = courses.Any(c => c.Id == model.CourseId);
+                if (!canUseCourse)
+                {
+                    return Forbid();
+                }
             }
-
-            var userId = int.Parse(userIdStr);
 
             var assignment = new Assignment
             {
@@ -85,7 +135,7 @@ namespace AssignmentCore.Controllers
                 DueDate = model.DueDate,
                 CreatedByUserId = userId,
                 CreatedAt = DateTime.UtcNow,
-                IsActive = true
+                IsActive = model.IsActive
             };
 
             await _assignmentRepository.AddAsync(assignment);
@@ -94,7 +144,7 @@ namespace AssignmentCore.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-
+        [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> Edit(int id)
         {
             var assignment = await _assignmentRepository.GetByIdAsync(id);
@@ -127,6 +177,7 @@ namespace AssignmentCore.Controllers
             return View(vm);
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         [HttpPost]
         public async Task<IActionResult> Edit(int id, AssignmentCreateViewModel model)
         {
@@ -164,6 +215,7 @@ namespace AssignmentCore.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> Delete(int id)
         {
             var assignment = await _assignmentRepository.GetByIdAsync(id);
@@ -178,6 +230,7 @@ namespace AssignmentCore.Controllers
             return View(assignment);
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         [HttpPost, ActionName("Delete")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
@@ -193,6 +246,7 @@ namespace AssignmentCore.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         [HttpPost]
         public async Task<IActionResult> ToggleActive(int id)
         {
