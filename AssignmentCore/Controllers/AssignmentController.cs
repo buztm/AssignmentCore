@@ -1,9 +1,11 @@
-﻿using AssignmentCore.Models;
+﻿using AspNetCoreHero.ToastNotification.Abstractions;
+using AssignmentCore.Models;
 using AssignmentCore.Repositories;
 using AssignmentCore.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 
 namespace AssignmentCore.Controllers
@@ -14,15 +16,21 @@ namespace AssignmentCore.Controllers
         private readonly AssignmentRepository _assignmentRepository;
         private readonly CourseRepository _courseRepository;
         private readonly UserRepository _userRepository;
+        private readonly INotyfService _notyf;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
         public AssignmentController(
             AssignmentRepository assignmentRepository,
             CourseRepository courseRepository,
-            UserRepository userRepository)
+            UserRepository userRepository, 
+            INotyfService notyf, 
+            IHubContext<NotificationHub> hubContext)
         {
             _assignmentRepository = assignmentRepository;
             _courseRepository = courseRepository;
             _userRepository = userRepository;
+            _notyf = notyf;
+            _hubContext = hubContext;
         }
 
         public async Task<IActionResult> Index()
@@ -141,6 +149,8 @@ namespace AssignmentCore.Controllers
             await _assignmentRepository.AddAsync(assignment);
             await _assignmentRepository.SaveAsync();
 
+            _notyf.Success("Assignment created successfully");
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -212,6 +222,8 @@ namespace AssignmentCore.Controllers
             _assignmentRepository.Update(assignment);
             await _assignmentRepository.SaveAsync();
 
+            _notyf.Information("Assignment edited successfully");
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -242,6 +254,8 @@ namespace AssignmentCore.Controllers
 
             _assignmentRepository.Remove(assignment);
             await _assignmentRepository.SaveAsync();
+
+            _notyf.Warning("Assignment deleted successfully");
 
             return RedirectToAction(nameof(Index));
         }

@@ -71,6 +71,8 @@ namespace AssignmentCore.Controllers
             }
 
             ModelState.AddModelError(string.Empty, "Invalid username or password.");
+
+
             return View(model);
         }
 

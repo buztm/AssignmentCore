@@ -8,6 +8,9 @@
 <partial name="~/Views/Shared/Partials/_Head.cshtml" />
 <head>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script src="~/js/SignalR.js"></script>
 </head>
 <body>
     <partial name="~/Views/Shared/Partials/_Sidebar.cshtml" />
@@ -27,11 +30,9 @@
         <partial name="~/Views/Shared/Partials/_Footer.cshtml" />
     </main>
     <partial name="~/Views/Shared/Partials/_Scripts.cshtml" />
-    
-    @RenderSection("Scripts", required: false)
 
-    <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@latest/dist/browser/signalr.min.js"></script>
-    <script src="~/js/signalr-notifications.js"></script>
+    @await Component.InvokeAsync("Notyf")
+    @RenderSection("Scripts", required: false)
 </body>
 </html>
 

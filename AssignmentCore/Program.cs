@@ -3,6 +3,8 @@ using AssignmentCore.Models;
 using AssignmentCore.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using AspNetCoreHero.ToastNotification;
+using AspNetCoreHero.ToastNotification.Extensions;
 
 async Task CreateRolesAsync(WebApplication app)
 {
@@ -76,6 +78,13 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddAuthorization();
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddNotyf(config =>
+{
+    config.DurationInSeconds = 4;
+    config.IsDismissable = true;
+    config.Position = NotyfPosition.BottomRight;
+});
+
 builder.Services.AddSignalR();
 
 builder.Services.AddScoped<UserRepository>();
@@ -104,11 +113,12 @@ app.MapStaticAssets();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseNotyf();
+app.MapHub<NotificationHub>("/notificationHub");
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Admin}/{action=Index}/{id?}")
     .WithStaticAssets();
-
-app.MapHub<NotificationHub>("/hubs/notifications");
 
 app.Run();

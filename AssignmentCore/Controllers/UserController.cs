@@ -1,9 +1,11 @@
-﻿using AssignmentCore.Models;
+﻿using AspNetCoreHero.ToastNotification.Abstractions;
+using AssignmentCore.Models;
 using AssignmentCore.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace AssignmentCore.Controllers
 {
@@ -13,15 +15,19 @@ namespace AssignmentCore.Controllers
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly IWebHostEnvironment _env;
+        private readonly INotyfService _notyf;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
         public UserController(
             UserManager<User> userManager,
             SignInManager<User> signInManager,
-            IWebHostEnvironment env)
+            IWebHostEnvironment env, INotyfService notyf, IHubContext<NotificationHub> hubContext)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _env = env;
+            _notyf = notyf;
+            _hubContext = hubContext;
         }
 
         [Authorize(Roles = "Admin")]
@@ -109,6 +115,8 @@ namespace AssignmentCore.Controllers
                 }
             }
 
+            _notyf.Success("User created successfully"); 
+
             if (model.Role == "Teacher")
                 return RedirectToAction("Teachers");
             else
@@ -156,7 +164,6 @@ namespace AssignmentCore.Controllers
             user.IsActive = model.IsActive;
             user.Role = model.Role;
 
-            // Şifre alanı doluysa yeni şifre set et
             if (!string.IsNullOrWhiteSpace(model.Password))
             {
                 var token = await _userManager.GeneratePasswordResetTokenAsync(user);
@@ -179,11 +186,12 @@ namespace AssignmentCore.Controllers
                 return View(model);
             }
 
-            // Role membership güncelle (Teacher/Student)
             var roles = await _userManager.GetRolesAsync(user);
             await _userManager.RemoveFromRolesAsync(user, roles);
             if (!string.IsNullOrEmpty(model.Role))
                 await _userManager.AddToRoleAsync(user, model.Role);
+
+            _notyf.Information("User updated successfully");
 
             if (model.Role == "Teacher")
                 return RedirectToAction("Teachers");
@@ -212,6 +220,8 @@ namespace AssignmentCore.Controllers
 
             var role = user.Role;
             await _userManager.DeleteAsync(user);
+
+            _notyf.Warning("User deleted successfully");
 
             if (role == "Teacher")
                 return RedirectToAction("Teachers");
@@ -288,6 +298,8 @@ namespace AssignmentCore.Controllers
 
             await _signInManager.RefreshSignInAsync(user);
 
+            _notyf.Information("Profile updated successfully");
+
             TempData["ProfileSuccess"] = "Profile updated successfully.";
             return RedirectToAction("Profile", new { tab = "edit" });
         }
@@ -321,6 +333,8 @@ namespace AssignmentCore.Controllers
 
                 return View("Profile", model);
             }
+
+            _notyf.Information("Password changed successfully");
 
             TempData["PasswordSuccess"] = "Password changed successfully.";
             return RedirectToAction("Profile", new { tab = "password" });

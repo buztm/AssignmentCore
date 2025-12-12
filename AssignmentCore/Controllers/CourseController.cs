@@ -1,9 +1,12 @@
-﻿using AssignmentCore.Models;
+﻿using AspNetCoreHero.ToastNotification.Abstractions;
+using AssignmentCore.Models;
 using AssignmentCore.Repositories;
 using AssignmentCore.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 
 namespace AssignmentCore.Controllers
@@ -13,11 +16,16 @@ namespace AssignmentCore.Controllers
     {
         private readonly CourseRepository _courseRepository;
         private readonly UserRepository _userRepository;
+        private readonly INotyfService _notyf;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
-        public CourseController(CourseRepository courseRepository, UserRepository userRepository)
+        public CourseController(CourseRepository courseRepository, UserRepository userRepository, 
+                                INotyfService notyf, IHubContext<NotificationHub> hubContext)
         {
             _courseRepository = courseRepository;
             _userRepository = userRepository;
+            _notyf = notyf;
+            _hubContext = hubContext;
         }
 
         public async Task<IActionResult> Index()
@@ -68,9 +76,8 @@ namespace AssignmentCore.Controllers
 
             if (role == "Teacher")
             {
-                // Öğretmen kurs açıyorsa TeacherId’yi biz set ediyoruz
                 course.TeacherId = userId;
-                ModelState.Remove("TeacherId");  // formda alan olmadığı için
+                ModelState.Remove("TeacherId");
             }
 
             if (role == "Admin" && course.TeacherId == 0)
@@ -90,6 +97,8 @@ namespace AssignmentCore.Controllers
 
             await _courseRepository.AddAsync(course);
             await _courseRepository.SaveAsync();
+
+            _notyf.Success("Course created successfully.");
 
             return RedirectToAction(nameof(Index));
         }
@@ -148,6 +157,8 @@ namespace AssignmentCore.Controllers
             _courseRepository.Update(course);
             await _courseRepository.SaveAsync();
 
+            _notyf.Information("Course edited successfully");
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -181,6 +192,8 @@ namespace AssignmentCore.Controllers
 
             _courseRepository.Remove(course);
             await _courseRepository.SaveAsync();
+
+            _notyf.Warning("Course deleted successfully");
 
             return RedirectToAction(nameof(Index));
         }
@@ -217,7 +230,6 @@ namespace AssignmentCore.Controllers
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var role = User.FindFirst(ClaimTypes.Role)!.Value;
 
-            // sadece admin veya ilgili öğretmen atama yapabilsin
             if (role != "Admin" && course.TeacherId != userId)
                 return Forbid();
 
@@ -254,16 +266,13 @@ namespace AssignmentCore.Controllers
             if (role != "Admin" && course.TeacherId != userId)
                 return Forbid();
 
-            // mevcut atamaları güncelle
             var selectedIds = model.SelectedStudentIds?.ToHashSet() ?? new HashSet<int>();
 
-            // 1) seçili olmayanları pasif yap
             foreach (var cs in course.Students)
             {
                 cs.IsActive = selectedIds.Contains(cs.StudentId);
             }
 
-            // 2) yeni seçilen ama tabloda olmayanları ekle
             var existingIds = course.Students.Select(cs => cs.StudentId).ToHashSet();
 
             foreach (var sid in selectedIds)
@@ -280,6 +289,8 @@ namespace AssignmentCore.Controllers
             }
 
             await _courseRepository.SaveAsync();
+
+            _notyf.Information("Students assigned to the course successfully");
 
             TempData["AssignSuccess"] = "Students assigned successfully.";
             return RedirectToAction(nameof(Index));

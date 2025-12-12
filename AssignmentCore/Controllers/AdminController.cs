@@ -59,18 +59,14 @@ namespace AssignmentCore.Controllers
             }
             else if (role == "Teacher")
             {
-                // Bu öğretmenin dersleri
                 var teacherCourses = await _courseRepository.GetByTeacherAsync(userId);
                 vm.TotalCourses = teacherCourses.Count;
 
-                // Assignments
                 vm.TotalAssignments = await _assignmentRepository.CountByTeacherAsync(userId);
                 vm.ActiveAssignments = await _assignmentRepository.CountActiveByTeacherAsync(userId);
 
-                // TotalUsers: istersen 0 bırak, istersen tüm öğrencileri say
                 vm.TotalUsers = 0;
 
-                // Latest assignments (sadece kendi derslerinden)
                 var latest = await _assignmentRepository.GetLatestForTeacherAsync(userId, 5);
                 vm.LatestAssignments = latest.Select(a => new AdminDashboardAssignmentItem
                 {
@@ -83,17 +79,14 @@ namespace AssignmentCore.Controllers
             }
             else if (role == "Student")
             {
-                // Öğrencinin atandığı kurslar
                 var studentCourses = await _courseRepository.GetForStudentAsync(userId);
                 vm.TotalCourses = studentCourses.Count;
 
-                // Öğrenciye ait ödev sayıları
                 vm.TotalAssignments = await _assignmentRepository.CountForStudentAsync(userId);
                 vm.ActiveAssignments = await _assignmentRepository.CountActiveForStudentAsync(userId);
 
-                vm.TotalUsers = 0; // öğrenci için istersen göstermeyebilirsin
+                vm.TotalUsers = 0;
 
-                // Latest assignments: işte burası senin istediğin kısım
                 var latest = await _assignmentRepository.GetLatestForStudentAsync(userId, 5);
                 vm.LatestAssignments = latest.Select(a => new AdminDashboardAssignmentItem
                 {
@@ -106,7 +99,6 @@ namespace AssignmentCore.Controllers
             }
             else
             {
-                // rol tanımsızsa boş dashboard
                 vm.TotalCourses = 0;
                 vm.TotalAssignments = 0;
                 vm.ActiveAssignments = 0;
