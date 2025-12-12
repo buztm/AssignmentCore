@@ -17,5 +17,6 @@
         public string CourseName { get; set; } = null!;
         public DateTime CreatedAt { get; set; }
         public DateTime? DueDate { get; set; }
+        public bool IsActive { get; set; }
     }
 }

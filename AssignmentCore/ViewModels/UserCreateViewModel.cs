@@ -22,6 +22,10 @@ namespace AssignmentCore.ViewModels
         [DataType(DataType.Password)]
         public string Password { get; set; } = null!;
 
+        [Compare("Password", ErrorMessage = "Passwords do not match.")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+
+
         [Required]
         public string Role { get; set; } = null!;   // "Teacher" veya "Student"
 

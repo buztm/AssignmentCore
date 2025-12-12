@@ -24,6 +24,9 @@ namespace AssignmentCore.ViewModels
         [Display(Name = "New Password (optional)")]
         public string? Password { get; set; }
 
+        [Compare("Password", ErrorMessage = "Passwords do not match")]
+        public string? ConfirmPassword { get; set; }
+
         [Required]
         public string Role { get; set; } = null!; // "Teacher" veya "Student"
 

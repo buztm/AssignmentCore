@@ -5,79 +5,103 @@
     ViewData["subTitle"] = "Course List";
 }
 
-<div class="card p-3">
-    <div class="flex justify-between mb-3">
-        <h2 class="text-xxl font-semibold mb-3">Course List</h2>
-        @if (!User.IsInRole("Student")) { <a asp-action = "Create" class="btn btn-primary">New Course</a> }
+<div class="card p-16 radius-16 shadow-sm rounded-4">
+    <div class="d-flex justify-content-between align-items-center mb-16">
+        <h2 class="h4 fw-semibold mb-0">Course List</h2>
+
+        @if (!User.IsInRole("Student")) 
+        {
+            <a asp-action="Create" class="btn btn-primary px-8">+ New Course</a>
+        }
     </div>
 
     @if (Model.Count == 0)
     {
-        <div class="p-3 mb-3 bg-warning rounded text-black-50">
+        <div class="alert alert-warning">
             There is no course yet!
         </div>
     }
+    else
+    {
+        <div class="table-responsive radius-16">
+            <table class="table striped-table align-middle">
+                <thead>
+                    <tr class="bg-primary">
+                        <th class="text-light">Course Code</th>
+                        <th class="text-light">Name</th>
+                        <th class="text-light">Description</th>
+                        <th class="text-light">Is Active</th>
 
-    <table class="striped-table rounded-4 bg-primary">
-        <thead>
-            <tr>
-                <th class="text-white">Course Code</th>
-                <th class="text-white">Name</th>
-                <th class="text-white">Description</th>
-                <th class="text-white">Is Active</th>
-                @if (User.IsInRole("Admin")) { <th class="text-right text-white">Teacher</th> }
-                @if(!User.IsInRole("Student")) { <th class="text-right text-white">Actions</th> }
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var c in Model)
-            {
-                <tr>
-                    <td>@c.Code</td>
-                    <td>@c.Name</td>
-                    <td>
-                        @if (c.Description != null)
+                        @if (User.IsInRole("Admin"))
                         {
-                            @c.Description
+                            <th class="text-right text-light">Teacher</th>
                         }
-                        else
-                        {
-                            <span>Empty!</span>
-                        }
-                    </td>
-                    <td>
-                        @if(User.IsInRole("Student"))
-                        {
-                            <span class="badge @(c.IsActive ? "bg-success" : "bg-danger")">@(c.IsActive ? "Active" : "Inactive")</span>
-                        }
-                        else
-                        {
-                            <button type="button" class="btn btn-xs toggle-active-btn" data-id="@c.Id">
-                                <span class="badge @(c.IsActive ? "bg-success" : "bg-danger")">
-                                    @(c.IsActive ? "Active" : "Inactive")
-                            </button>
-                        }
-                    </td>
 
-                    @if (User.IsInRole("Admin"))
+                        @if (!User.IsInRole("Student"))
+                        {
+                            <th class="text-end text-light">Actions</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody class="border-top">
+                    @foreach (var c in Model)
                     {
-                        <td>
-                            <a class="hover-text-info" href="@Url.Action("Teachers", "User")">@c.Teacher.FullName</a>
-                        </td>
+                        <tr class="border-bottom">
+                            <td>@c.Code</td>
+                            <td>@c.Name</td>
+
+                            <td>
+                                @if (c.Description != null)
+                                {
+                                    @c.Description
+                                }
+                                else
+                                {
+                                    <span>Empty!</span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (User.IsInRole("Student"))
+                                {
+                                    <span class="badge @(c.IsActive ? "bg-success" : "bg-danger")">@(c.IsActive ? "Active" : "Inactive")</span>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn btn-xs toggle-active-btn" data-id="@c.Id">
+                                        <span class="badge @(c.IsActive ? "bg-success" : "bg-danger")">
+                                            @(c.IsActive ? "Active" : "Inactive")
+                                    </button>
+                                }
+                            </td>
+
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <td>
+                                    <a class="hover-text-info" href="@Url.Action("Teachers", "User")">@c.Teacher.FullName</a>
+                                </td>
+                            }
+
+                            @if (!User.IsInRole("Student"))
+                            {
+                                <td class="text-end">
+                                    <a asp-action="AssignStudents" asp-route-id="@c.Id" class="btn btn-sm btn-outline-info me-1">
+                                        Students
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-outline-primary me-1">
+                                        Edit
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@c.Id" class="btn btn-sm btn-outline-danger me-1">
+                                        Delete
+                                    </a>
+                                </td>
+                            }
+                        </tr>
                     }
-                    
-                    @if (!User.IsInRole("Student"))
-                    {
-                        <td class="text-right">
-                            <a asp-action="AssignStudents" asp-route-id="@c.Id" class="btn btn-sm btn-outline-info">Students</a>
-                            <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-primary">Edit</a>
-                            <a asp-action="Delete" asp-route-id="@c.Id" class="btn btn-sm btn-danger">Delete</a>
-                        </td>
-                    }
-                </tr>
-            }
-        </tbody>
-    </table>
+                </tbody>
+            </table>
+        </div>
+    }
 </div>
 
 @section Scripts {

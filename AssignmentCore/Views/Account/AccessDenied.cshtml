@@ -4,18 +4,21 @@
     ViewData["subTitle"] = "You do not have permission";
 }
 
-<div class="card p-50 w-50">
-    <h1 class="h1 text-danger mb-10 text-center">Access Denied</h1>
-    <span class="bg-danger rounded-3 p-3 mb-50 text-white">
-        You do not have permission to access this page.
-    </span>
+<div class="card p-40 radius-16 mx-auto mt-40" style="max-width: 600px;">
+    <div class="d-flex justify-content-center mb-4">
+        <iconify-icon icon="solar:shield-warning-bold" class="text-danger" style="font-size: 72px;"></iconify-icon>
+    </div>
 
-    @if (User.IsInRole("Student"))
-    {
-        <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-2">Back to Home</a>
-    }
-    else
-    {
-        <a asp-controller="Admin" asp-action="Index" class="btn btn-primary mt-2">Back to Dashboard</a>
-    }
+    <h2 class="text-center text-white bg-danger p-10 radius-16">Access Denied</h2>
+
+    <p class="text-center text-secondary-light mb-4">
+        You do not have permission to view this page.
+    </p>
+
+    <div class="text-center">
+        <a asp-controller="Admin" asp-action="Index"
+           class="btn btn-primary px-32 py-12">
+            Back to Dashboard
+        </a>
+    </div>
 </div>

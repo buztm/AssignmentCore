@@ -53,7 +53,8 @@ namespace AssignmentCore.Controllers
                     Title = a.Title,
                     CourseName = a.Course?.Name ?? "-",
                     CreatedAt = a.CreatedAt,
-                    DueDate = a.DueDate
+                    DueDate = a.DueDate,
+                    IsActive = a.IsActive
                 }).ToList();
             }
             else if (role == "Teacher")
@@ -76,7 +77,8 @@ namespace AssignmentCore.Controllers
                     Title = a.Title,
                     CourseName = a.Course?.Name ?? "-",
                     CreatedAt = a.CreatedAt,
-                    DueDate = a.DueDate
+                    DueDate = a.DueDate,
+                    IsActive = a.IsActive
                 }).ToList();
             }
             else if (role == "Student")
@@ -98,7 +100,8 @@ namespace AssignmentCore.Controllers
                     Title = a.Title,
                     CourseName = a.Course?.Name ?? "-",
                     CreatedAt = a.CreatedAt,
-                    DueDate = a.DueDate
+                    DueDate = a.DueDate,
+                    IsActive = a.IsActive
                 }).ToList();
             }
             else

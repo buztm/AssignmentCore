@@ -1,4 +1,7 @@
-﻿@{
+﻿@using Microsoft.AspNetCore.Identity
+@inject UserManager<AssignmentCore.Models.User> UserManager
+
+@{
 }
 <div class="navbar-header">
     <div class="row align-items-center justify-content-between">
@@ -312,13 +315,19 @@
 
                 <div class="dropdown">
                     @{
-                        var profilePathClaim = User.FindFirst("ProfileImagePath")?.Value;
-                        var defaultAvatar = Url.Content("~/images/profile/default-avatar.png");
+                        var dbUser = await UserManager.GetUserAsync(User);
+                        string avatarUrl;
 
-                        var avatarUrl = string.IsNullOrEmpty(profilePathClaim)
-                            ? defaultAvatar
-                            : Url.Content(profilePathClaim);
+                        if (dbUser == null || string.IsNullOrEmpty(dbUser.ProfileImagePath))
+                        {
+                            avatarUrl = Url.Content("~/images/profile/default-avatar.png");
+                        }
+                        else
+                        {
+                            avatarUrl = Url.Content(dbUser.ProfileImagePath);
+                        }
                     }
+
 
                     <button class="d-flex justify-content-center align-items-center rounded-circle"
                             type="button"
@@ -335,10 +344,10 @@
                         <div class="py-12 px-16 radius-8 bg-primary-50 mb-16 d-flex align-items-center justify-content-between gap-2">
                             <div>
                                 <h6 class="text-lg text-primary-light fw-semibold mb-2">
-                                    @User.FindFirst("FullName")?.Value
+                                    @dbUser?.FullName
                                 </h6>
                                 <span class="text-secondary-light fw-medium text-sm">
-                                    @User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value
+                                    @string.Join(", ", await UserManager.GetRolesAsync(dbUser))
                                 </span>
                             </div>
                             <button type="button" class="hover-text-danger" data-bs-dismiss="dropdown">
@@ -373,11 +382,9 @@
 
                                 </form>
                             </li>
-
                         </ul>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>

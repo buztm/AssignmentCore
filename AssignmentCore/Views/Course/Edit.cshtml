@@ -5,46 +5,58 @@
     ViewData["subTitle"] = "Update Course";
 }
 
-<div class="card p-3 w-50">
-    <form asp-action="Edit" method="post">
+<div class="card p-16 radius-16 w-50 mx-10 shadow-sm rounded-4">
+
+    <h3 class="card-header text-info-500 mb-16 p-4">Edit Course</h3>
+
+    <!-- VALIDATION -->
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
+    
+    <form asp-action="Edit" method="post" class="row g-3">
         <input type="hidden" asp-for="Id" />
 
-        <div class="mb-3">
-            <label class="form-label">Course Code</label>
-            <input asp-for="Code" class="form-control mb-1" />
-            <span asp-validation-for="Code" class="text-danger text-sm block mt-1"></span>
+        <!-- COURSE CODE-->
+        <div class="col-md-12">
+            <label class="form-label fw-semibold">Course Code</label>
+            <input asp-for="Code" class="form-control radius-12" />
+            <span asp-validation-for="Code" class="text-danger text-sm block d-block"></span>
         </div>
 
-        <div class="mb-3">
+        <!-- COURSE NAME -->
+        <div class="col-md-12">
             <label class="form-label">Course Name</label>
-            <input asp-for="Name" class="form-control mb-1" />
-            <span asp-validation-for="Name" class="text-danger text-sm block mt-1"></span>
+            <input asp-for="Name" class="form-control radius-12" />
+            <span asp-validation-for="Name" class="text-danger text-sm block d-block"></span>
         </div>
 
-        <div class="mb-3">
+        <!-- DESCRIPTION -->
+        <div class="col-md-12">
             <label class="form-label">Description</label>
-            <textarea asp-for="Description" class="form-control"></textarea>
+            <textarea asp-for="Description" class="form-control radius-12"></textarea>
         </div>
 
+        <!-- TEACHER -->
         @if (User.IsInRole("Admin"))
         {
-            <div class="mb-3">
+            <div class="col-md-12">
                 <label class="form-label">Teacher</label>
-                <select asp-for="TeacherId" asp-items="ViewBag.Teachers" class="form-control">
+                <select asp-for="TeacherId" asp-items="ViewBag.Teachers" class="form-control radius-12 text-center">
                     <option value="">Select Teacher</option>
                 </select>
-                <span asp-validation-for="TeacherId" class="text-danger text-sm"></span>
+                <span asp-validation-for="TeacherId" class="text-danger text-sm block d-block"></span>
             </div>
         }
 
-        <div class="mb-3 flex items-center gap-2">
-            <input asp-for="IsActive" class="form-check-input" />
-            <label asp-for="IsActive" class="form-check-label">Is Active</label>
+        <!-- IS ACTIVE -->
+        <div class="col-md-6 d-flex align-items-start mt-3 mb-3">
+            <input asp-for="IsActive" class="form-check-input me-4" />
+            <label asp-for="IsActive" class="form-check-label fw-semibold">Is Active</label>
         </div>
 
-        <div class="flex justify-between">
-            <button type="submit" class="btn btn-primary">Save</button>
-            <a asp-action="Index" class="btn btn-secondary">Back</a>
+        <!-- BUTTONS -->
+        <div class="col-12 d-flex justify-content-between mt-4">
+            <button type="submit" class="btn btn-primary px-16">Save</button>
+            <a asp-action="Index" class="btn btn-secondary px-16">Back</a>
         </div>
     </form>
 </div>

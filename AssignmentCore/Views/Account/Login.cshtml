@@ -14,8 +14,8 @@
 
     <div class="auth-right py-32 px-24 d-flex flex-column justify-content-right">
         <div class="max-w-464-px mx-auto w-100">
-            <div class="mb-4">
-                <a asp-controller="Home" asp-action="Index" class="mb-40 max-w-290-px d-inline-block">
+            <div class="mb-4 text-center">
+                <a asp-controller="Home" asp-action="Index" class=" mb-40 max-w-290-px d-inline-block">
                     <img src="~/images/University-Logo.png" alt="">
                 </a>
                 <h4 class="mb-12">Sign In to your Account</h4>
@@ -23,11 +23,14 @@
             </div>
 
             <!-- VALIDATION -->
-            
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
             <!-- FORM -->
             <form asp-action="Login" asp-controller="Account" method="post">
                 @Html.AntiForgeryToken()
+
+                <!-- RETURN URL (hidden) -->
+                <input type="hidden" asp-for="ReturnUrl" />
 
                 <!-- USERNAME / EMAIL -->
                 <div class="position-relative mb-20">

@@ -1,26 +1,29 @@
-﻿using AssignmentCore.Repositories;
-using AssignmentCore.Security;
+﻿using AssignmentCore.Models;
 using AssignmentCore.ViewModels;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace AssignmentCore.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly UserRepository _userRepository;
+        private readonly SignInManager<User> _signInManager;
+        private readonly UserManager<User> _userManager;
 
-        public IActionResult ViewProfile()
+        public AccountController(SignInManager<User> signInManager,
+                                 UserManager<User> userManager)
         {
-            return View();
+            _signInManager = signInManager;
+            _userManager = userManager;
         }
 
-        public AccountController(UserRepository userRepository)
+        public async Task<IActionResult> ViewProfile()
         {
-            _userRepository = userRepository;
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return RedirectToAction("Login");
+
+            return View(user);
         }
 
         [HttpGet]
@@ -30,74 +33,52 @@ namespace AssignmentCore.Controllers
             ViewData["title"] = "Sign In";
             ViewData["subTitle"] = "Authentication";
 
-            ViewBag.ReturnUrl = returnUrl;
-            return View(new LoginViewModel());
+            return View(new LoginViewModel
+            {
+                ReturnUrl = returnUrl
+            });
         }
 
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
-            ViewBag.ReturnUrl = returnUrl;
-
             if (!ModelState.IsValid)
                 return View(model);
 
-            var allUsers = await _userRepository.GetAllAsync();
-            var user = allUsers
-                .FirstOrDefault(u =>
-                    (u.UserName == model.UserNameOrEmail || u.Email == model.UserNameOrEmail) &&
-                    u.IsActive);
+            User? user =
+                await _userManager.FindByNameAsync(model.UserNameOrEmail)
+                ?? await _userManager.FindByEmailAsync(model.UserNameOrEmail);
 
-            if (user == null ||
-                !PasswordHelper.VerifyPassword(model.Password, user.PasswordHash, user.PasswordSalt))
+            if (user == null || !user.IsActive)
             {
                 ModelState.AddModelError(string.Empty, "Invalid username or password.");
                 return View(model);
             }
 
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role),
-                new Claim("FullName", user.FullName)
-            };
+            var result = await _signInManager.PasswordSignInAsync(
+                user,
+                model.Password,
+                model.RememberMe,
+                lockoutOnFailure: false);
 
-            if (!string.IsNullOrEmpty(user.ProfileImagePath))
+            if (result.Succeeded)
             {
-                claims.Add(new Claim("ProfileImagePath", user.ProfileImagePath));
+                if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
+                    return Redirect(model.ReturnUrl);
+
+                return RedirectToAction("Index", "Admin");
             }
 
-            var claimsIdentity = new ClaimsIdentity(
-                claims,
-                CookieAuthenticationDefaults.AuthenticationScheme);
-
-            var authProperties = new AuthenticationProperties();
-
-            if (model.RememberMe)
-            {
-                authProperties.IsPersistent = true;
-                authProperties.ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7); // örnek: 7 gün
-            }
-
-            await HttpContext.SignInAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme,
-                new ClaimsPrincipal(claimsIdentity),
-                authProperties);
-
-            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-                return Redirect(returnUrl);
-
-            return RedirectToAction("Index", "Admin");
+            ModelState.AddModelError(string.Empty, "Invalid username or password.");
+            return View(model);
         }
 
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction("Login", "Account");
+            await _signInManager.SignOutAsync();
+            return RedirectToAction("Login");
         }
 
         [AllowAnonymous]

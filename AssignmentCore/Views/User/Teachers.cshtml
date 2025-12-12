@@ -6,52 +6,72 @@
     ViewData["subTitle"] = "Teacher List";
 }
 
-<div class="card p-3">
-    <div class="flex justify-between mb-4">
-        <h2 class="text-xxl font-semibold mb-3">Teacher List</h2>
-        <a asp-action="CreateTeacher" class="btn btn-primary">New Teacher</a>
+<div class="card p-16 radius-16 shadow-sm rounded-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-16">
+        <h2 class="h4 fw-semibold mb-0">Teacher List</h2>
+        <a asp-action="CreateTeacher" class="btn btn-primary px-8">+ New Teacher</a>
     </div>
 
     @if (Model.Count == 0)
     {
-        <div class="p-3 mb-3 bg-warning rounded text-black-50">
+        <div class="alert alert-warning">
             There is no teacher yet!
         </div>
     }
+    else
+    {
+        <div class="table-responsive radius-16">
+            <table class="table striped-table align-middle">
 
-    <table class="striped-table rounded-4 bg-primary">
-        <thead>
-            <tr>
-                <th class="text-white">User Name</th>
-                <th class="text-white">Full Name</th>
-                <th class="text-white">Email</th>
-                <th class="text-white">Is Active?</th>
-                <th class="text-right text-white">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var u in Model)
-            {
-                <tr class="hover:bg-slate-700/30 transition">
-                    <td>@u.UserName</td>
-                    <td>@u.FullName</td>
-                    <td>@u.Email</td>
-                    <td>
-                        @if (u.IsActive)
-                        {
-                            <span class="badge bg-success">Active</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-danger">Inactive</span>
-                        }
-                    </td>
-                    <td class="text-right">
-                        <a asp-action="Edit" asp-route-id="@u.Id" class="btn btn-xs btn-primary me-2">Edit</a>
-                        <a asp-action="Delete" asp-route-id="@u.Id" class="btn btn-xs btn-danger">Delete</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                <thead class="">
+                    <tr class="bg-primary">
+                        <th class="text-light">User Name</th>
+                        <th class="text-light">Full Name</th>
+                        <th class="text-light">Email</th>
+                        <th class="text-light">Status</th>
+                        <th class="text-light text-end">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody class="border-top">
+                    @foreach (var u in Model)
+                    {
+                        <tr class="border-bottom">
+
+                            <td>@u.UserName</td>
+                            <td>@u.FullName</td>
+                            <td>@u.Email</td>
+
+                            <td>
+                                @if (u.IsActive)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Inactive</span>
+                                }
+                            </td>
+
+                            <td class="text-end">
+                                <a asp-action="Edit" asp-route-id="@u.Id"
+                                   class="btn btn-sm btn-outline-primary me-1">
+                                    Edit
+                                </a>
+
+                                <a asp-action="Delete" asp-route-id="@u.Id"
+                                   class="btn btn-sm btn-outline-danger">
+                                    Delete
+                                </a>
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+        </div>
+    }
 </div>

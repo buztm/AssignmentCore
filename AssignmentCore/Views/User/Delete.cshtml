@@ -5,53 +5,56 @@
     ViewData["subTitle"] = Model.Role == "Teacher" ? "Delete Teacher" : "Delete Student";
 }
 
-<div class="card p-3 w-50">
-    <p class="bg-danger text-black-50 rounded-3 p-3 mb-3">
-        Are you sure you want to delete this user?
-    </p>
+<div class="card p-16 radius-16 w-50 mx-10 shadow-sm rounded-4">
 
-    <table class="basic-border-table mb-3">
-        <thead>
-            <tr>
-                <th>User Name</th>
-                <th>Full Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Is Active?</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>@Model.UserName</td>
-                <td>@Model.FullName</td>
-                <td>@Model.Email</td>
-                <td>@Model.Role</td>
-                <td>
-                    @if (Model.IsActive)
-                    {
-                        <span class="badge bg-success">Active</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-danger">Inactive</span>
-                    }
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    <h3 class="card-header text-danger-500 mb-16 p-4">Delete @Model.Role</h3>
+
+    <div class="alert alert-danger">
+        Are you sure you want to delete this user?
+    </div>
+
+    <div class="table-responsive radius-16">
+        <table class="table striped-table align-middle">
+            <thead>
+                <tr class="bg-danger">
+                    <th class="text-light">Full Name</th>
+                    <th class ="text-light">Email</th>
+                    <th class="text-light">Status</th>
+                </tr>
+            </thead>
+            <tbody class="border-top">
+                <tr class="border-bottom">
+                    <td>@Model.FullName</td>
+                    <td>@Model.Email</td>
+                    <td>
+                        @if (Model.IsActive)
+                        {
+                            <span class="badge bg-success">Active</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Inactive</span>
+                        }
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    
 
     <form asp-action="Delete" method="post">
         <input type="hidden" asp-for="Id" />
-        <div class="flex justify-between">
+        <div class="col-12 d-flex justify-content-between mt-4">
             <button type="submit" class="btn btn-danger">Delete</button>
 
             @if (Model.Role == "Teacher")
             {
-                <a asp-action="Teachers" class="btn btn-secondary">Cancel</a>
+                <a asp-action="Teachers" class="btn btn-secondary px-16">Cancel</a>
             }
             else
             {
-                <a asp-action="Students" class="btn btn-secondary">Cancel</a>
+                <a asp-action="Students" class="btn btn-secondary px-16">Cancel</a>
             }
         </div>
     </form>

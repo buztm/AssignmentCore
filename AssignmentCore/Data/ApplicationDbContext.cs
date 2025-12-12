@@ -1,13 +1,16 @@
 ﻿using AssignmentCore.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace AssignmentCore.Data
 {
-    public class ApplicationDbContext:DbContext
+    public class ApplicationDbContext
+        : IdentityDbContext<User, IdentityRole<int>, int>
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options): base(options)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+            : base(options)
         {
-
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -35,7 +38,6 @@ namespace AssignmentCore.Data
 
         public DbSet<Assignment> Assignments { get; set; } = null!;
         public DbSet<Course> Courses { get; set; } = null!;
-        public DbSet<User> Users { get; set; } = null!;
         public DbSet<CourseStudent> CourseStudents { get; set; } = null!;
     }
 }

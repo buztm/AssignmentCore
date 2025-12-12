@@ -1,15 +1,10 @@
-﻿namespace AssignmentCore.Models
+﻿using Microsoft.AspNetCore.Identity;
+
+namespace AssignmentCore.Models
 {
-    public class User
+    public class User : IdentityUser<int>
     {
-        public int Id { get; set; }
-
-        public string UserName { get; set; } = null!;
         public string FullName { get; set; } = null!;
-        public string Email { get; set; } = null!;
-
-        public string PasswordHash { get; set; } = null!;
-        public string PasswordSalt { get; set; } = null!;
 
         public string Role { get; set; } = "Student";
 

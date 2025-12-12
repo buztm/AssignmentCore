@@ -6,45 +6,54 @@
     ViewData["subTitle"] = "New Assignment";
 }
 
-<div class="card p-3 w-50">
-    <form asp-action="Create" method="post">
+<div class="card p-16 radius-16 w-50 mx-10 shadow-sm rounded-4">
 
-        <div class="mb-3">
-            <label class="form-label">Title</label>
-            <input asp-for="Title" class="form-control mb-1" />
-            <span asp-validation-for="Title" class="text-danger text-sm block mt-1"></span>
+    <h3 class="card-header text-info-500 mb-16 p-4">Create Assignment</h3>
+
+    <!-- VALIDATION -->
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
+
+    <form asp-action="Create" method="post" class="row g-3">
+
+        <!-- TITLE -->
+        <div class="col-md-12">
+            <label class="form-label fw-semibold">Title</label>
+            <input asp-for="Title" class="form-control radius-12" placeholder="Enter title"/>
+            <span asp-validation-for="Title" class="text-danger text-sm d-block"></span>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Course</label>
-            <select asp-for="CourseId"
-                    asp-items="Model.Courses"
-                    class="form-control mb-1">
+        <!-- COURSE -->
+        <div class="col-md-12">
+            <label class="form-label fw-semibold">Course</label>
+            <select asp-for="CourseId" asp-items="Model.Courses" class="form-control radius-12 text-center">
                 <option value="">-- Select Course --</option>
             </select>
-            <span asp-validation-for="CourseId" class="text-danger text-sm block mt-1"></span>
+            <span asp-validation-for="CourseId" class="text-danger text-sm d-block"></span>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Description</label>
-            <textarea asp-for="Description" class="form-control"></textarea>
+        <!-- DESCRIPTION -->
+        <div class="col-md-12">
+            <label class="form-label fw-semibold">Description</label>
+            <textarea asp-for="Description" class="form-control radius-12" placeholder="Enter description"></textarea>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Due Date</label>
-            <input asp-for="DueDate" type="date" class="form-control" />
-            <span asp-validation-for="DueDate" class="text-danger text-sm block mt-1"></span>
+        <!--DUE DATE-->
+        <div class="col-md-12">
+            <label class="form-label fw-semibold">Due Date</label>
+            <input asp-for="DueDate" type="date" class="form-control radius-12" />
+            <span asp-validation-for="DueDate" class="text-danger text-sm d-block"></span>
         </div>
 
-        <div class="mb-3 flex items-center gap-2">
-            <input asp-for="IsActive" class="form-check-input" />
-            <label asp-for="IsActive" class="form-check-label">Is Active</label>
-            <span></span>
+        <!-- IS ACTIVE -->
+        <div class="col-md-6 d-flex align-items-start mt-3 mb-3">
+            <input asp-for="IsActive" class="form-check-input me-4" />
+            <label asp-for="IsActive" class="form-check-label fw-semibold">Is Active</label>
         </div>
 
-        <div class="flex justify-between">
-            <button type="submit" class="btn btn-primary">Save</button>
-            <a asp-action="Index" class="btn btn-secondary">Back</a>
+        <!-- BUTTONS -->
+        <div class="col-12 d-flex justify-content-between mt-4">
+            <button type="submit" class="btn btn-primary px-16">Save</button>
+            <a asp-action="Index" class="btn btn-secondary px-16">Back</a>
         </div>
     </form>
 </div>

@@ -1,24 +1,26 @@
 ﻿using AssignmentCore.Models;
-using AssignmentCore.Repositories;
-using AssignmentCore.Security;
 using AssignmentCore.ViewModels;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace AssignmentCore.Controllers
 {
     [Authorize]
     public class UserController : Controller
     {
-        private readonly UserRepository _userRepository;
+        private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
         private readonly IWebHostEnvironment _env;
 
-        public UserController(UserRepository userRepository, IWebHostEnvironment env)
+        public UserController(
+            UserManager<User> userManager,
+            SignInManager<User> signInManager,
+            IWebHostEnvironment env)
         {
-            _userRepository = userRepository;
+            _userManager = userManager;
+            _signInManager = signInManager;
             _env = env;
         }
 
@@ -28,9 +30,7 @@ namespace AssignmentCore.Controllers
             ViewData["title"] = "Teachers";
             ViewData["subTitle"] = "Teacher List";
 
-            var users = await _userRepository.GetAllAsync();
-            var teachers = users.Where(u => u.Role == "Teacher").ToList();
-
+            var teachers = await _userManager.GetUsersInRoleAsync("Teacher");
             return View(teachers);
         }
 
@@ -40,9 +40,7 @@ namespace AssignmentCore.Controllers
             ViewData["title"] = "Students";
             ViewData["subTitle"] = "Student List";
 
-            var users = await _userRepository.GetAllAsync();
-            var students = users.Where(u => u.Role == "Student").ToList();
-
+            var students = await _userManager.GetUsersInRoleAsync("Student");
             return View(students);
         }
 
@@ -80,34 +78,46 @@ namespace AssignmentCore.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var (hash, salt) = PasswordHelper.CreatePasswordHash(model.Password);
-
             var user = new User
             {
                 UserName = model.UserName,
                 FullName = model.FullName,
                 Email = model.Email,
-                PasswordHash = hash,
-                PasswordSalt = salt,
-                Role = model.Role,
-                IsActive = model.IsActive
+                IsActive = model.IsActive,
+                Role = model.Role
             };
 
-            await _userRepository.AddAsync(user);
-            await _userRepository.SaveAsync();
+            var result = await _userManager.CreateAsync(user, model.Password);
 
-            // Role'e göre listeye geri dön
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                    ModelState.AddModelError(string.Empty, error.Description);
+
+                return View(model);
+            }
+
+            if (!string.IsNullOrEmpty(model.Role))
+            {
+                var roleResult = await _userManager.AddToRoleAsync(user, model.Role);
+                if (!roleResult.Succeeded)
+                {
+                    foreach (var error in roleResult.Errors)
+                        ModelState.AddModelError(string.Empty, error.Description);
+
+                    return View(model);
+                }
+            }
+
             if (model.Role == "Teacher")
                 return RedirectToAction("Teachers");
-            else if (model.Role == "Student")
-                return RedirectToAction("Students");
             else
-                return RedirectToAction("Teachers");
+                return RedirectToAction("Students");
         }
 
         public async Task<IActionResult> Edit(int id)
         {
-            var user = await _userRepository.GetByIdAsync(id);
+            var user = await _userManager.FindByIdAsync(id.ToString());
             if (user == null)
                 return NotFound();
 
@@ -117,9 +127,9 @@ namespace AssignmentCore.Controllers
             var vm = new UserEditViewModel
             {
                 Id = user.Id,
-                UserName = user.UserName,
+                UserName = user.UserName!,
                 FullName = user.FullName,
-                Email = user.Email,
+                Email = user.Email!,
                 Role = user.Role,
                 IsActive = user.IsActive
             };
@@ -136,26 +146,44 @@ namespace AssignmentCore.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var user = await _userRepository.GetByIdAsync(id);
+            var user = await _userManager.FindByIdAsync(id.ToString());
             if (user == null)
                 return NotFound();
 
             user.UserName = model.UserName;
             user.FullName = model.FullName;
             user.Email = model.Email;
-            user.Role = model.Role;
             user.IsActive = model.IsActive;
+            user.Role = model.Role;
 
-            // Şifre alanı doluysa MD5+Salt ile güncelle
+            // Şifre alanı doluysa yeni şifre set et
             if (!string.IsNullOrWhiteSpace(model.Password))
             {
-                var (hash, salt) = PasswordHelper.CreatePasswordHash(model.Password);
-                user.PasswordHash = hash;
-                user.PasswordSalt = salt;
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                var pwdResult = await _userManager.ResetPasswordAsync(user, token, model.Password);
+                if (!pwdResult.Succeeded)
+                {
+                    foreach (var error in pwdResult.Errors)
+                        ModelState.AddModelError(string.Empty, error.Description);
+
+                    return View(model);
+                }
             }
 
-            _userRepository.Update(user);
-            await _userRepository.SaveAsync();
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                foreach (var error in updateResult.Errors)
+                    ModelState.AddModelError(string.Empty, error.Description);
+
+                return View(model);
+            }
+
+            // Role membership güncelle (Teacher/Student)
+            var roles = await _userManager.GetRolesAsync(user);
+            await _userManager.RemoveFromRolesAsync(user, roles);
+            if (!string.IsNullOrEmpty(model.Role))
+                await _userManager.AddToRoleAsync(user, model.Role);
 
             if (model.Role == "Teacher")
                 return RedirectToAction("Teachers");
@@ -165,7 +193,7 @@ namespace AssignmentCore.Controllers
 
         public async Task<IActionResult> Delete(int id)
         {
-            var user = await _userRepository.GetByIdAsync(id);
+            var user = await _userManager.FindByIdAsync(id.ToString());
             if (user == null)
                 return NotFound();
 
@@ -178,14 +206,12 @@ namespace AssignmentCore.Controllers
         [HttpPost, ActionName("Delete")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var user = await _userRepository.GetByIdAsync(id);
+            var user = await _userManager.FindByIdAsync(id.ToString());
             if (user == null)
                 return NotFound();
 
             var role = user.Role;
-
-            _userRepository.Remove(user);
-            await _userRepository.SaveAsync();
+            await _userManager.DeleteAsync(user);
 
             if (role == "Teacher")
                 return RedirectToAction("Teachers");
@@ -194,41 +220,38 @@ namespace AssignmentCore.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Profile()
+        public async Task<IActionResult> Profile(string? tab = null)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-                return RedirectToAction("Login", "Account");
-
-            if (!int.TryParse(userIdClaim.Value, out int userId))
-                return RedirectToAction("Login", "Account");
-
-            var user = await _userRepository.GetByIdAsync(userId);
+            var user = await _userManager.GetUserAsync(User);
             if (user == null)
-                return NotFound();
+                return RedirectToAction("Login", "Account");
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var role = roles.FirstOrDefault() ?? "-";
 
             var vm = new UserProfileViewModel
             {
                 Id = user.Id,
-                UserName = user.UserName,
+                UserName = user.UserName!,
                 FullName = user.FullName,
-                Email = user.Email,
-                Role = user.Role,
+                Email = user.Email!,
+                Role = role,
                 ProfileImagePath = user.ProfileImagePath
             };
 
-            return View(vm); // Views/User/Profile.cshtml
+            ViewBag.ActiveTab = tab;
+            return View(vm);
         }
 
         [HttpPost]
-        public async Task<IActionResult> UpdateProfile(UserProfileViewModel model, IFormFile? profileImageFile)
+        public async Task<IActionResult> UpdateProfile(
+            UserProfileViewModel model,
+            IFormFile? profileImageFile)
         {
             if (!ModelState.IsValid)
-            {
                 return View("Profile", model);
-            }
 
-            var user = await _userRepository.GetByIdAsync(model.Id);
+            var user = await _userManager.FindByIdAsync(model.Id.ToString());
             if (user == null)
                 return NotFound();
 
@@ -240,9 +263,7 @@ namespace AssignmentCore.Controllers
             {
                 var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "profile");
                 if (!Directory.Exists(uploadsFolder))
-                {
                     Directory.CreateDirectory(uploadsFolder);
-                }
 
                 var fileExt = Path.GetExtension(profileImageFile.FileName);
                 var fileName = $"user_{user.Id}_{Guid.NewGuid():N}{fileExt}";
@@ -253,74 +274,56 @@ namespace AssignmentCore.Controllers
                     await profileImageFile.CopyToAsync(stream);
                 }
 
-                // Web'den erişilebilir path (wwwroot dışına çıkma)
                 user.ProfileImagePath = "/uploads/profile/" + fileName;
             }
 
-            _userRepository.Update(user);
-            await _userRepository.SaveAsync();
-
-            var claims = new List<Claim>
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role)
-            };
+                foreach (var error in result.Errors)
+                    ModelState.AddModelError(string.Empty, error.Description);
 
-            if (!string.IsNullOrEmpty(user.ProfileImagePath))
-            {
-                claims.Add(new Claim("ProfileImagePath", user.ProfileImagePath));
+                return View("Profile", model);
             }
 
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var principal = new ClaimsPrincipal(identity);
-
-            await HttpContext.SignInAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme,
-                principal);
+            await _signInManager.RefreshSignInAsync(user);
 
             TempData["ProfileSuccess"] = "Profile updated successfully.";
-            return RedirectToAction("Profile");
+            return RedirectToAction("Profile", new { tab = "edit" });
         }
 
         [HttpPost]
         public async Task<IActionResult> ChangePassword(UserProfileViewModel model)
         {
-            // sadece şifre alanlarını validate ediyoruz
             if (string.IsNullOrWhiteSpace(model.NewPassword))
             {
                 ModelState.AddModelError("NewPassword", "New password is required.");
+                return await Profile();
             }
 
-            if (!ModelState.IsValid)
-            {
-                var user = await _userRepository.GetByIdAsync(model.Id);
-                if (user == null)
-                    return NotFound();
+            var user = await _userManager.FindByIdAsync(model.Id.ToString());
+            if (user == null)
+                return NotFound();
 
-                model.UserName = user.UserName;
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, model.NewPassword!);
+
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                    ModelState.AddModelError(string.Empty, error.Description);
+
+                model.UserName = user.UserName!;
                 model.FullName = user.FullName;
-                model.Email = user.Email;
+                model.Email = user.Email!;
                 model.Role = user.Role;
                 model.ProfileImagePath = user.ProfileImagePath;
 
                 return View("Profile", model);
             }
 
-            var existingUser = await _userRepository.GetByIdAsync(model.Id);
-            if (existingUser == null)
-                return NotFound();
-
-            var (hash, salt) = PasswordHelper.CreatePasswordHash(model.NewPassword!);
-            existingUser.PasswordHash = hash;
-            existingUser.PasswordSalt = salt;
-
-            _userRepository.Update(existingUser);
-            await _userRepository.SaveAsync();
-
             TempData["PasswordSuccess"] = "Password changed successfully.";
-            return RedirectToAction("Profile");
+            return RedirectToAction("Profile", new { tab = "password" });
         }
     }
 }

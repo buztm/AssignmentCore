@@ -8,7 +8,6 @@
 <div class="row g-4 mb-50 mt-50 justify-content-center">
 
     <!-- Total Courses -->
-    
     <div class="col-12 col-md-6 col-xl-3">
         <div class="dash-stat card py-5 text-center">
             <a href="/Course">
@@ -67,37 +66,53 @@
 </div>
 
 <!-- Latest assignments -->
-<div class="card p-4">
-    <h2 class="text-2xxl font-semibold mb-4 p-4">Latest Assignments</h2>
+<div class="card p-16 radius-16 shadow-sm rounded-4">
+    <div class="d-flex justify-content-between align-items-center mb-16">
+        <h2 class="h4 fw-semibold mb-0">Latest Assignments</h2>
+    </div>
 
     @if (Model.LatestAssignments == null || Model.LatestAssignments.Count == 0)
     {
-        <div class="bg-warning rounded-3 p-3 text-black-50 text-xl">
+        <div class="alert alert-warning">
             There are no assignments yet.
         </div>
     }
     else
     {
-        <table class="striped-table rounded-4 bg-primary">
-            <thead>
-                <tr>
-                    <th class="text-white">Assignment</th>
-                    <th class="text-white">Course</th>
-                    <th class="text-white">Created At</th>
-                    <th class="text-white">Due Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var a in Model.LatestAssignments)
-                {
-                    <tr>
-                        <td class="py-2">@a.Title</td>
-                        <td>@a.CourseName</td>
-                        <td>@a.CreatedAt.ToString("dd.MM.yyyy")</td>
-                        <td>@(a.DueDate?.ToString("dd.MM.yyyy"))</td>
+        <div class="table-responsive radius-16">
+            <table class="table striped-table align-middle">
+                <thead>
+                    <tr class="bg-primary">
+                        <th class="text-light">Assignment</th>
+                        <th class="text-light">Course</th>
+                        <th class="text-light">Created At</th>
+                        <th class="text-light">Due Date</th>
+                        <th class="text-light">Status</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody class="border-top">
+
+                    @foreach (var a in Model.LatestAssignments)
+                    {
+                        <tr class="border-bottom">
+                            <td class="py-2">@a.Title</td>
+                            <td>@a.CourseName</td>
+                            <td>@a.CreatedAt.ToString("dd.MM.yyyy")</td>
+                            <td>@(a.DueDate?.ToString("dd.MM.yyyy"))</td>
+                            <td>
+                                @if(a.IsActive)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Inactive</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     }
 </div>
