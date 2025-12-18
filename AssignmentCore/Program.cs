@@ -1,10 +1,12 @@
-using AssignmentCore.Data;
-using AssignmentCore.Models;
-using AssignmentCore.Repositories;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using AspNetCoreHero.ToastNotification;
 using AspNetCoreHero.ToastNotification.Extensions;
+using AssignmentCore.Data;
+using AssignmentCore.Hubs;
+using AssignmentCore.Models;
+using AssignmentCore.Repositories;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 async Task CreateRolesAsync(WebApplication app)
 {
@@ -80,9 +82,19 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddNotyf(config =>
 {
-    config.DurationInSeconds = 4;
+    config.DurationInSeconds = 6;
     config.IsDismissable = true;
     config.Position = NotyfPosition.BottomRight;
+});
+
+builder.Services.Configure<FormOptions>(o =>
+{
+    o.MultipartBodyLengthLimit = 500 * 1024 * 1024; // 500 MB
+});
+
+builder.WebHost.ConfigureKestrel(o =>
+{
+    o.Limits.MaxRequestBodySize = 500 * 1024 * 1024; // 500 MB
 });
 
 builder.Services.AddSignalR();
@@ -114,7 +126,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseNotyf();
-app.MapHub<NotificationHub>("/notificationHub");
+app.MapHub<GeneralHub>("/notificationHub");
 
 app.MapControllerRoute(
     name: "default",

@@ -8,12 +8,12 @@
 
 <div class="card p-16 radius-16 w-50 mx-10 shadow-sm rounded-4">
 
-    <h3 class="card-header text-info-500 mb-16 p-4">Create Assignment</h3>
+    <h4 class="card-header text-info-500 mb-16 p-4">Create Assignment</h4>
 
     <!-- VALIDATION -->
     <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-3"></div>
 
-    <form asp-action="Create" method="post" class="row g-3">
+    <form asp-action="Create" method="post" enctype="multipart/form-data" class="row g-3">
 
         <!-- TITLE -->
         <div class="col-md-12">
@@ -29,6 +29,24 @@
                 <option value="">-- Select Course --</option>
             </select>
             <span asp-validation-for="CourseId" class="text-danger text-sm d-block"></span>
+        </div>
+
+        <!-- Upload File -->
+        <div class="col-md-12">
+            <label class="form-label fw-semibold">Files</label>
+            <input asp-for="Attachment"
+                   type="file"
+                   id="attachmentInput"
+                   class="d-none" />
+
+            <button type="button" class="btn btn-outline-primary col-md-12 radius-12" onclick="document.getElementById('attachmentInput').click()">
+                <i class="ri-upload-2-line"></i>
+                Upload File
+            </button>
+
+            <div id="selectedFileName" class="mt-2 text-muted small"></div>
+
+            <span asp-validation-for="Attachment" class="text-danger text-sm d-block"></span>
         </div>
 
         <!-- DESCRIPTION -->
@@ -58,3 +76,19 @@
     </form>
 </div>
 
+<script>
+    const fileInput = document.getElementById("attachmentInput");
+    const fileNameDiv = document.getElementById("selectedFileName");
+
+    if (fileInput) {
+        fileInput.addEventListener("change", function () {
+            if (this.files.length > 0) {
+                fileNameDiv.innerHTML =
+                    `<div class="mt-2">
+                        <i class="ri-file-text-line me-2 fs-5 text-primary"></i>
+                        <i class=" text-primary me-2 fs-5">${this.files[0].name}</i>
+                    </div>`;
+            }
+        });
+    }
+</script>

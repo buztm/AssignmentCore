@@ -5,27 +5,29 @@
     ViewData["subTitle"] = Model.CourseName;
 }
 
-<div class="card p-4 row g-4 mb-50 mt-50">
-    <h2 class="text-xl font-semibold mb-3">Assign Students to @Model.CourseName</h2>
+<div class="card p-40 radius-16 w-50 mx-10 mt-auto shadow-sm rounded-4">
+    <h4 class="card-header text-info-500 mb-16 p-4">Assign Students to <br /> @Model.CourseName</h4>
 
     <form asp-action="AssignStudents" method="post">
         <input type="hidden" asp-for="CourseId" />
 
-        <div class="mb-3">
+        <div class="col-md-12">
             @foreach (var s in Model.Students)
             {
                 var isChecked = Model.SelectedStudentIds.Contains(int.Parse(s.Value));
-                <div class="form-check p-1">
-                    <input class="form-check-input" 
-                        type="checkbox" 
+                <div class="col-md-6 d-flex align-items-start mt-3 mb-3">
+                    <input class="form-check-input me-4"
+                           type="checkbox" 
                         name="SelectedStudentIds" 
                         value="@s.Value" @(isChecked ? "checked" : "") />
-                    <label class="form-check-label">- @s.Text</label>
+                    <label class="form-check-label fw-semibold">- @s.Text</label>
                 </div>
             }
         </div>
 
-        <button type="submit" class="btn btn-primary">Save</button>
-        <a asp-action="Index" class="btn btn-secondary">Back</a>
+        <div class="col-12 d-flex justify-content-between mt-4">
+            <button type="submit" class="btn btn-primary px-16">Save</button>
+            <a asp-action="Index" class="btn btn-secondary px-16">Back</a>
+        </div>
     </form>
 </div>

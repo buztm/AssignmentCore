@@ -1,4 +1,5 @@
 ﻿using AspNetCoreHero.ToastNotification.Abstractions;
+using AssignmentCore.Hubs;
 using AssignmentCore.Models;
 using AssignmentCore.Repositories;
 using AssignmentCore.ViewModels;
@@ -17,10 +18,10 @@ namespace AssignmentCore.Controllers
         private readonly CourseRepository _courseRepository;
         private readonly UserRepository _userRepository;
         private readonly INotyfService _notyf;
-        private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly IHubContext<GeneralHub> _hubContext;
 
         public CourseController(CourseRepository courseRepository, UserRepository userRepository, 
-                                INotyfService notyf, IHubContext<NotificationHub> hubContext)
+                                INotyfService notyf, IHubContext<GeneralHub> hubContext)
         {
             _courseRepository = courseRepository;
             _userRepository = userRepository;

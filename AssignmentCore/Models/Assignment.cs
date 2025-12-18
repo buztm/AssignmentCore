@@ -17,6 +17,12 @@ namespace AssignmentCore.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? DueDate { get; set; }
 
+        public string? AttachmentPath { get; set; }
+        public string? AttachmentOriginalName { get; set; }
+        public string? AttachmentContentType { get; set; }
+        public long? AttachmentSize { get; set; }
+
+
         public bool IsActive { get; set; } = true;
     }
 }

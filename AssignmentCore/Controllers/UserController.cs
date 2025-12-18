@@ -1,8 +1,8 @@
 ﻿using AspNetCoreHero.ToastNotification.Abstractions;
+using AssignmentCore.Hubs;
 using AssignmentCore.Models;
 using AssignmentCore.ViewModels;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -16,12 +16,12 @@ namespace AssignmentCore.Controllers
         private readonly SignInManager<User> _signInManager;
         private readonly IWebHostEnvironment _env;
         private readonly INotyfService _notyf;
-        private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly IHubContext<GeneralHub> _hubContext;
 
         public UserController(
             UserManager<User> userManager,
             SignInManager<User> signInManager,
-            IWebHostEnvironment env, INotyfService notyf, IHubContext<NotificationHub> hubContext)
+            IWebHostEnvironment env, INotyfService notyf, IHubContext<GeneralHub> hubContext)
         {
             _userManager = userManager;
             _signInManager = signInManager;

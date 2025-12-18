@@ -1,6 +1,7 @@
 ﻿using AssignmentCore.Validators;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace AssignmentCore.ViewModels
 {
@@ -21,6 +22,9 @@ namespace AssignmentCore.ViewModels
         [Required(ErrorMessage = "Due date is required.")]
         [DueDateNotPast]
         public DateTime? DueDate { get; set; }
+
+        public IFormFile? Attachment { get; set; }
+        public string? ExistingAttachmentPath { get; set; }
 
 
         public bool IsActive { get; set; } = true;

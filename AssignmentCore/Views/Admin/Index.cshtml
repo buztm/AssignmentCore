@@ -6,7 +6,6 @@
 }
 
 <div class="row g-4 mb-50 mt-50 justify-content-center">
-
     <!-- Total Courses -->
     <div class="col-12 col-md-6 col-xl-3">
         <div class="dash-stat card py-5 text-center">
@@ -28,7 +27,7 @@
                 <div class="stat-icon-large bg-success-subtle text-success mb-3">
                     <i class="bi bi-pencil-square"></i>
                 </div>
-                <div class="stat-value-large">@Model.TotalAssignments</div>
+                <div id="assingmentCount" class="stat-value-large">@Model.TotalAssignments</div>
                 <div class="stat-label-large">Total Assignments</div>
             </a>
         </div>
@@ -42,7 +41,7 @@
                 <div class="stat-icon-large bg-warning-subtle text-warning mb-3">
                     <i class="bi bi-check2-circle"></i>
                 </div>
-                <div class="stat-value-large">@Model.ActiveAssignments</div>
+                <div id="assignmentActiveCount" class="stat-value-large">@Model.ActiveAssignments</div>
                 <div class="stat-label-large">Active Assignments</div>
             </a>
         </div>
@@ -63,6 +62,13 @@
             </div>
         </div>
     }
+</div>
+
+<!-- SignalR -->
+<div class="row g-4 mb-50 mt-50 justify-content-center">
+    <div class="col-md-12">
+        <div id="divResult"></div>
+    </div>
 </div>
 
 <!-- Latest assignments -->
@@ -116,3 +122,53 @@
         </div>
     }
 </div>
+
+
+@section Scripts {
+    <script>
+        var connectionHub = new signalR.HubConnectionBuilder()
+            .withUrl("/notificationHub", signalR.HttpTransportType.WebSockets)
+            .configureLogging(signalR.LogLevel.Information)
+            .build();
+
+        connectionHub.on("onAssignmentAdd", (d) => {
+            $("#assingmentCount").html(d);
+            $("#divResult")
+                .show()
+                .removeClass()
+                .addClass("alert alert-info")
+                .html("New assignment added!")
+                .fadeOut(5000);
+
+        });
+        connectionHub.on("onAssignmentUpdate", (d) => {
+            $("#assignmentActiveCount").html(d);
+            $("#divResult")
+                .show()
+                .removeClass()
+                .addClass("alert alert-info")
+                .html("An assignment updated!")
+                .fadeOut(5000);
+        });
+        connectionHub.on("onAssignmentDelete", (d) => {
+            $("#catCount").html(d);
+            $("#divResult")
+                .show()
+                .removeClass()
+                .addClass("alert alert-info")
+                .html("An assignment deleted!")
+                .fadeOut(5000);
+        });
+
+
+        function fullfilled() {
+            console.log("SignalR Connected!");
+        }
+        function rejected() {
+            console.log("SignalR Error!");
+
+        }
+        connectionHub.start().then(fullfilled, rejected);
+
+    </script>
+}
