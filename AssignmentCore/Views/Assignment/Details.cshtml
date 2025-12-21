@@ -107,8 +107,10 @@
                         <div class="fw-semibold mb-1">Submitted ✅</div>
                         <div class="text-sm">Submitted at: @mySub.SubmittedAt.ToString("dd MMM yyyy HH:mm")</div>
                         <div class="mt-2">
-                            <a class="btn btn-sm btn-primary" href="@mySub.FilePath" target="_blank" rel="noopener">
-                                Open submission
+                            <a class="btn btn-sm btn-primary"
+                               asp-action="SubmissionDetails" asp-route-id="@mySub.Id">
+                                <i class="ri-eye-line me-1"></i>
+                                View My Submission
                             </a>
                         </div>
                     </div>

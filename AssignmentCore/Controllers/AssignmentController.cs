@@ -81,6 +81,9 @@ namespace AssignmentCore.Controllers
 
             var assignments = await _assignmentRepository.GetForStudentWithCourseAsync(userId);
 
+            var mySubs = await _submissionRepository.GetForStudentAsync(userId);
+            var subLookup = mySubs.ToDictionary(x => x.AssignmentId, x => x);
+
             if (!string.IsNullOrWhiteSpace(search))
             {
                 assignments = assignments.Where(a =>
@@ -122,9 +125,10 @@ namespace AssignmentCore.Controllers
                 Courses = courseItems
             };
 
+            ViewBag.SubmissionMap = subLookup;
+
             return View(vm);
         }
-
 
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> Create()
@@ -562,5 +566,27 @@ namespace AssignmentCore.Controllers
             var relPath = $"/uploads/submissions/{assignmentId}/{studentId}/{safeFileName}";
             return (relPath, file.FileName, file.ContentType, file.Length);
         }
+
+        [Authorize(Roles = "Admin,Teacher,Student")]
+        public async Task<IActionResult> SubmissionDetails(int id)
+        {
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)!.Value;
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+
+            var submission = await _submissionRepository.GetByIdFullAsync(id);
+            if (submission == null) return NotFound();
+
+            if (role == "Student" && submission.StudentId != userId)
+                return Forbid();
+
+            if (role == "Teacher" && submission.Assignment.Course.TeacherId != userId)
+                return Forbid();
+
+            ViewData["title"] = "Submission";
+            ViewData["subTitle"] = submission.Assignment.Title;
+
+            return View(submission);
+        }
+
     }
 }

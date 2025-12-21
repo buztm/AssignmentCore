@@ -49,9 +49,15 @@
                                 <div class="text-secondary-light text-sm">@s.ContentType • @s.Size bytes</div>
                             </td>
                             <td class="text-end">
-                                <a class="btn btn-sm btn-primary" href="@s.FilePath" target="_blank" rel="noopener">
-                                    Open
-                                </a>
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a class="btn btn-sm btn-outline-secondary"
+                                       asp-action="SubmissionDetails" asp-route-id="@s.Id">
+                                        <i class="ri-eye-line me-1"></i> Details
+                                    </a>
+                                    <a class="btn btn-sm btn-primary" href="@s.FilePath" target="_blank" rel="noopener">
+                                        Open
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     }

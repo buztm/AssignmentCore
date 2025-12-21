@@ -24,5 +24,21 @@ namespace AssignmentCore.Repositories
                 .OrderByDescending(s => s.SubmittedAt)
                 .ToListAsync();
         }
+
+        public async Task<AssignmentSubmission?> GetByIdFullAsync(int submissionId)
+        {
+            return await _context.AssignmentSubmissions
+                .Include(s => s.Student)
+                .Include(s => s.Assignment)
+                    .ThenInclude(a => a.Course)
+                .FirstOrDefaultAsync(s => s.Id == submissionId);
+        }
+
+        public async Task<List<AssignmentSubmission>> GetForStudentAsync(int studentId)
+        {
+            return await _context.AssignmentSubmissions
+                .Where(s => s.StudentId == studentId)
+                .ToListAsync();
+        }
     }
 }

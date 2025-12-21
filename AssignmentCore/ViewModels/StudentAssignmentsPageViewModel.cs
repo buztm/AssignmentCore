@@ -12,5 +12,8 @@ namespace AssignmentCore.ViewModels
         public int? CourseId { get; set; }
 
         public List<SelectListItem> Courses { get; set; } = new();
+
+        public Dictionary<int, AssignmentCore.Models.AssignmentSubmission> SubmissionMap { get; set; } = new();
+
     }
 }

@@ -39,7 +39,7 @@ namespace AssignmentCore.Data
                 .HasOne(s => s.Assignment)
                 .WithMany(a => a.Submissions)
                 .HasForeignKey(s => s.AssignmentId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<AssignmentSubmission>()
                 .HasOne(s => s.Student)
