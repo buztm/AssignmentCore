@@ -19,7 +19,6 @@ namespace AssignmentCore.ViewModels
         [EmailAddress]
         public string Email { get; set; } = null!;
 
-        // Boş bırakılırsa şifre değiştirmeyeceğiz
         [DataType(DataType.Password)]
         [Display(Name = "New Password (optional)")]
         public string? Password { get; set; }
@@ -28,7 +27,7 @@ namespace AssignmentCore.ViewModels
         public string? ConfirmPassword { get; set; }
 
         [Required]
-        public string Role { get; set; } = null!; // "Teacher" veya "Student"
+        public string Role { get; set; } = null!;
 
         [Display(Name = "Is Active")]
         public bool IsActive { get; set; }

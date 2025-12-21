@@ -20,7 +20,6 @@ namespace AssignmentCore.Controllers
             if (User.IsInRole("Student"))
                 return RedirectToAction("Overview", "Student");
 
-            // Admin + Teacher
             return RedirectToAction("Index", "Admin");
         }
 

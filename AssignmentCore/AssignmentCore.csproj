@@ -23,4 +23,9 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\uploads\submissions\47\25\" />
+    <Folder Include="wwwroot\uploads\submissions\48\25\" />
+  </ItemGroup>
+
 </Project>
