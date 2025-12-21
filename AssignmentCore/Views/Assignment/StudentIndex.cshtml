@@ -1,0 +1,126 @@
+﻿@model AssignmentCore.ViewModels.StudentAssignmentsPageViewModel
+
+@{
+    int DaysLeft(DateTime? due)
+    {
+        if (due == null) return int.MaxValue;
+        return (int)Math.Ceiling((due.Value.Date - DateTime.Now.Date).TotalDays);
+    }
+
+    string DueLabel(DateTime? due)
+    {
+        if (due == null) return "No due date";
+        var d = DaysLeft(due);
+        if (d < 0) return $"Overdue by {Math.Abs(d)} day(s)";
+        if (d == 0) return "Due today";
+        if (d == 1) return "Due tomorrow";
+        return $"Due in {d} day(s)";
+    }
+
+    string DueBadgeClass(DateTime? due)
+    {
+        if (due == null) return "bg-secondary";
+        var d = DaysLeft(due);
+        if (d < 0) return "bg-danger";
+        if (d <= 2) return "bg-warning";
+        if (d <= 7) return "bg-info";
+        return "bg-success";
+    }
+
+    var dueSoon = Model.Assignments
+        .Where(a => a.DueDate != null && DaysLeft(a.DueDate) >= 0 && DaysLeft(a.DueDate) <= 7)
+        .ToList();
+
+    var completed = new List<AssignmentCore.Models.Assignment>();
+}
+
+<div class="stu-page stu-assignments card p-24 radius-16 rounded-4 shadow-sm mb-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+            <h5 class="mb-4">My Assignments</h5>
+            <div class="text-secondary-light">Search, filter, and jump into details.</div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <span class="badge bg-primary">Total: @Model.Assignments.Count</span>
+            <span class="badge bg-warning text-dark">Due Soon: @dueSoon.Count</span>
+            <span class="badge bg-danger">Overdue: @Model.Assignments.Count(a => a.DueDate != null && DaysLeft(a.DueDate) < 0)</span>
+        </div>
+    </div>
+
+    <hr class="my-16" />
+
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-12 col-md-5">
+            <label class="form-label mb-6">Search</label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="ri-search-line"></i></span>
+                <input class="form-control" name="search" value="@Model.Search" placeholder="Title, course, description..." />
+            </div>
+        </div>
+
+        <div class="col-12 col-md-3">
+            <label class="form-label mb-6">Course</label>
+            <select class="form-select" name="courseId">
+                <option value="">All courses</option>
+                @foreach (var c in Model.Courses)
+                {
+                    <option value="@c.Value" selected="@(Model.CourseId?.ToString() == c.Value)">
+                        @c.Text
+                    </option>
+                }
+            </select>
+        </div>
+
+        <div class="col-12 col-md-2">
+            <label class="form-label mb-6">Status</label>
+            <select class="form-select" name="status">
+                <option value="all" selected="@(Model.Status == "all")">All</option>
+                <option value="active" selected="@(Model.Status == "active")">Active</option>
+                <option value="inactive" selected="@(Model.Status == "inactive")">Inactive</option>
+            </select>
+        </div>
+
+        <div class="col-12 col-md-2 d-grid">
+            <button class="btn btn-primary" type="submit">
+                <i class="ri-filter-3-line me-1"></i> Apply
+            </button>
+        </div>
+    </form>
+</div>
+
+<ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-all" type="button" role="tab">
+            All (@Model.Assignments.Count)
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-soon" type="button" role="tab">
+            Due Soon (@dueSoon.Count)
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-completed" type="button" role="tab">
+            Completed (@completed.Count)
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="tab-all" role="tabpanel">
+        @await Html.PartialAsync("_AssignmentCards", Model.Assignments)
+    </div>
+
+    <div class="tab-pane fade" id="tab-soon" role="tabpanel">
+        @await Html.PartialAsync("_AssignmentCards", dueSoon)
+    </div>
+
+    <div class="tab-pane fade" id="tab-completed" role="tabpanel">
+        <div class="card p-24 radius-16 shadow-sm">
+            <div class="alert alert-info mb-0">
+                Completed list will appear after the submission feature (upload/status/grade) is implemented.
+            </div>
+        </div>
+    </div>
+</div>

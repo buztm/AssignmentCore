@@ -21,6 +21,7 @@ namespace AssignmentCore.Controllers
         private readonly INotyfService _notyf;
         private readonly IHubContext<GeneralHub> _hubContext;
         private readonly IWebHostEnvironment _env;
+        private readonly SubmissionRepository _submissionRepository;
 
         public AssignmentController(
             AssignmentRepository assignmentRepository,
@@ -28,7 +29,8 @@ namespace AssignmentCore.Controllers
             UserRepository userRepository,
             INotyfService notyf,
             IHubContext<GeneralHub> hubContext,
-            IWebHostEnvironment env)
+            IWebHostEnvironment env,
+            SubmissionRepository submissionRepository)
         {
             _assignmentRepository = assignmentRepository;
             _courseRepository = courseRepository;
@@ -36,9 +38,10 @@ namespace AssignmentCore.Controllers
             _notyf = notyf;
             _hubContext = hubContext;
             _env = env;
+            _submissionRepository = submissionRepository;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? search, string status = "all", int? courseId = null)
         {
             ViewData["title"] = "Assignments";
             ViewData["subTitle"] = "Assignment List";
@@ -67,6 +70,61 @@ namespace AssignmentCore.Controllers
 
             return View(assignments);
         }
+
+        [Authorize(Roles = "Student")]
+        public async Task<IActionResult> StudentIndex(string? search, string status = "all", int? courseId = null)
+        {
+            ViewData["title"] = "My Assignments";
+            ViewData["subTitle"] = "Track deadlines, files, and details";
+
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var assignments = await _assignmentRepository.GetForStudentWithCourseAsync(userId);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                assignments = assignments.Where(a =>
+                    (a.Title ?? "").Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    (a.Description ?? "").Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    (a.Course?.Name ?? "").Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    (a.Course?.Code ?? "").Contains(search, StringComparison.OrdinalIgnoreCase)
+                ).ToList();
+            }
+
+            if (courseId.HasValue)
+                assignments = assignments.Where(a => a.CourseId == courseId.Value).ToList();
+
+            if (!string.IsNullOrWhiteSpace(status) && status != "all")
+            {
+                if (status == "active") assignments = assignments.Where(a => a.IsActive).ToList();
+                if (status == "inactive") assignments = assignments.Where(a => !a.IsActive).ToList();
+            }
+
+            var courseItems = assignments
+                .Where(a => a.Course != null)
+                .Select(a => a.Course!)
+                .GroupBy(c => c.Id)
+                .Select(g => g.First())
+                .OrderBy(c => c.Name)
+                .Select(c => new SelectListItem
+                {
+                    Value = c.Id.ToString(),
+                    Text = $"{c.Code} • {c.Name}"
+                })
+                .ToList();
+
+            var vm = new StudentAssignmentsPageViewModel
+            {
+                Assignments = assignments.OrderBy(a => a.DueDate ?? DateTime.MaxValue).ToList(),
+                Search = search,
+                Status = status,
+                CourseId = courseId,
+                Courses = courseItems
+            };
+
+            return View(vm);
+        }
+
 
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> Create()
@@ -356,6 +414,152 @@ namespace AssignmentCore.Controllers
                 await file.CopyToAsync(stream);
 
             var relPath = $"/uploads/assignments/{safeFileName}";
+            return (relPath, file.FileName, file.ContentType, file.Length);
+        }
+
+        public async Task<IActionResult> Details(int id)
+        {
+            var role = User.FindFirst(ClaimTypes.Role)!.Value;
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var assignment = await _assignmentRepository.GetByIdWithCourseAndStudentsAsync(id);
+            if (assignment == null) return NotFound();
+
+            if (role == "Teacher")
+            {
+                if (assignment.Course.TeacherId != userId) return Forbid();
+            }
+            else if (role == "Student")
+            {
+                var enrolled = assignment.Course.Students.Any(s => s.StudentId == userId && s.IsActive);
+                if (!enrolled) return Forbid();
+            }
+
+            ViewData["title"] = "Assignment Details";
+            ViewData["subTitle"] = assignment.Title;
+
+            var submission = await _submissionRepository.GetByAssignmentAndStudentAsync(id, userId);
+            ViewBag.MySubmission = submission;
+
+            var canSubmit = assignment.IsActive
+                && (assignment.DueDate == null || assignment.DueDate.Value >= DateTime.UtcNow)
+                && submission == null;
+
+            ViewBag.CanSubmit = canSubmit;
+
+            return View(assignment);
+        }
+
+        [Authorize(Roles = "Admin,Teacher")]
+        public async Task<IActionResult> Submissions(int id)
+        {
+            var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)!.Value;
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+
+            var assignment = await _assignmentRepository.GetByIdWithCourseAsync(id);
+            if (assignment == null) return NotFound();
+
+            if (role == "Teacher")
+            {
+                if (assignment.Course.TeacherId != userId) return Forbid();
+            }
+
+            var list = await _submissionRepository.GetForAssignmentAsync(id);
+
+            ViewData["title"] = "Submissions";
+            ViewData["subTitle"] = assignment.Title;
+
+            ViewBag.Assignment = assignment;
+            return View(list);
+        }
+
+
+        [Authorize(Roles = "Student")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Submit(ViewModels.SubmissionCreateViewModel model)
+        {
+            var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+
+            var assignment = await _assignmentRepository.GetByIdWithCourseAndStudentsAsync(model.AssignmentId);
+            if (assignment == null) return NotFound();
+
+            var enrolled = assignment.Course.Students.Any(s => s.StudentId == userId && s.IsActive);
+            if (!enrolled) return Forbid();
+
+            if (!assignment.IsActive)
+            {
+                TempData["error"] = "This course is not active.";
+                return RedirectToAction(nameof(Details), new { id = assignment.Id });
+            }
+
+            if (assignment.DueDate != null && assignment.DueDate.Value < DateTime.UtcNow)
+            {
+                TempData["error"] = "You can't deliver because the deadline has passed.";
+                return RedirectToAction(nameof(Details), new { id = assignment.Id });
+            }
+
+            var existing = await _submissionRepository.GetByAssignmentAndStudentAsync(assignment.Id, userId);
+            if (existing != null)
+            {
+                TempData["error"] = "You've already submitted this assignment. You can't submit it again.";
+                return RedirectToAction(nameof(Details), new { id = assignment.Id });
+            }
+
+            if (!ModelState.IsValid)
+            {
+                TempData["error"] = "There is an error on the delivery form.";
+                return RedirectToAction(nameof(Details), new { id = assignment.Id });
+            }
+
+            var uploadInfo = await SaveSubmissionFileAsync(model.File, assignment.Id, userId);
+
+            var submission = new Models.AssignmentSubmission
+            {
+                AssignmentId = assignment.Id,
+                StudentId = userId,
+                SubmittedAt = DateTime.UtcNow,
+
+                FilePath = uploadInfo.relPath,
+                OriginalName = uploadInfo.originalName,
+                ContentType = uploadInfo.contentType,
+                Size = uploadInfo.size,
+
+                Note = model.Note
+            };
+
+            await _submissionRepository.AddAsync(submission);
+            await _submissionRepository.SaveAsync();
+
+            _notyf.Success("Assignment submitted.");
+            return RedirectToAction(nameof(Details), new { id = assignment.Id });
+        }
+
+        private async Task<(string relPath, string originalName, string contentType, long size)> SaveSubmissionFileAsync(
+            IFormFile file, int assignmentId, int studentId)
+        {
+            if (file == null || file.Length == 0)
+                throw new InvalidOperationException("No file selected.");
+
+            var allowed = new[] { ".pdf", ".doc", ".docx", ".zip", ".rar", ".png", ".jpg", ".jpeg" };
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!allowed.Contains(ext))
+                throw new InvalidOperationException("This file type is not allowed.");
+
+            const long maxBytes = 500 * 1024 * 1024;
+            if (file.Length > maxBytes)
+                throw new InvalidOperationException("The file size is too large.");
+
+            var uploadsRoot = Path.Combine(_env.WebRootPath, "uploads", "submissions", assignmentId.ToString(), studentId.ToString());
+            Directory.CreateDirectory(uploadsRoot);
+
+            var safeFileName = $"{DateTime.UtcNow:yyyyMMdd_HHmmss}_{Guid.NewGuid():N}{ext}";
+            var absPath = Path.Combine(uploadsRoot, safeFileName);
+
+            using (var stream = System.IO.File.Create(absPath))
+                await file.CopyToAsync(stream);
+
+            var relPath = $"/uploads/submissions/{assignmentId}/{studentId}/{safeFileName}";
             return (relPath, file.FileName, file.ContentType, file.Length);
         }
     }

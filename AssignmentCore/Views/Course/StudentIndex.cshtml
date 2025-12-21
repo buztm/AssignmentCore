@@ -1,0 +1,38 @@
+﻿@model List<AssignmentCore.Models.Course>
+@{
+    ViewData["title"] = "My Courses";
+    ViewData["subTitle"] = "Your enrolled courses";
+    Layout = "~/Views/Shared/_LayoutStudent.cshtml";
+}
+
+<div class="stu-page stu-assignments card p-24 radius-16 shadow-sm mb-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+            <h5 class="mb-4">My Courses</h5>
+            <div class="text-secondary-light">Browse your courses and open course pages.</div>
+        </div>
+
+        <span class="badge bg-primary">Total: @Model.Count</span>
+    </div>
+
+    <hr class="my-16" />
+
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-12 col-md-10">
+            <label class="form-label mb-6">Search</label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="ri-search-line"></i></span>
+                <input class="form-control" name="search" value="@Context.Request.Query["search"]"
+                       placeholder="Course code, name, description..." />
+            </div>
+        </div>
+
+        <div class="col-12 col-md-2 d-grid">
+            <button class="btn btn-primary" type="submit">
+                <i class="ri-filter-3-line me-1"></i> Apply
+            </button>
+        </div>
+    </form>
+</div>
+
+@await Html.PartialAsync("_CourseCards", Model)

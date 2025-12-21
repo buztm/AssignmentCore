@@ -5,6 +5,7 @@ using System.Diagnostics;
 
 namespace AssignmentCore.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -16,7 +17,11 @@ namespace AssignmentCore.Controllers
 
         public IActionResult Index()
         {
-            return View();
+            if (User.IsInRole("Student"))
+                return RedirectToAction("Overview", "Student");
+
+            // Admin + Teacher
+            return RedirectToAction("Index", "Admin");
         }
 
         public IActionResult Privacy()

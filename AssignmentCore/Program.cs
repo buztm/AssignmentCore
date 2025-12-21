@@ -102,7 +102,7 @@ builder.Services.AddSignalR();
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<CourseRepository>();
 builder.Services.AddScoped<AssignmentRepository>();
-
+builder.Services.AddScoped<SubmissionRepository>();
 
 var app = builder.Build();
 
@@ -130,7 +130,7 @@ app.MapHub<GeneralHub>("/notificationHub");
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Admin}/{action=Index}/{id?}")
+    pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
 app.Run();

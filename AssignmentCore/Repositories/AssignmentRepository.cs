@@ -94,5 +94,13 @@ namespace AssignmentCore.Repositories
             => await _context.Assignments.CountAsync(a =>
                 a.IsActive &&
                 a.Course.Students.Any(cs => cs.StudentId == studentId && cs.IsActive));
+
+        public async Task<Assignment?> GetByIdWithCourseAndStudentsAsync(int id)
+        {
+            return await _context.Assignments
+                .Include(a => a.Course)
+                    .ThenInclude(c => c.Students)
+                .FirstOrDefaultAsync(a => a.Id == id);
+        }
     }
 }

@@ -73,6 +73,63 @@ namespace AssignmentCore.Migrations
                     b.ToTable("Assignments");
                 });
 
+            modelBuilder.Entity("AssignmentCore.Models.AssignmentSubmission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AssignmentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("Grade")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("GradedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("GradedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OriginalName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("Size")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("StudentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TeacherFeedback")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("AssignmentId", "StudentId")
+                        .IsUnique();
+
+                    b.ToTable("AssignmentSubmissions");
+                });
+
             modelBuilder.Entity("AssignmentCore.Models.Course", b =>
                 {
                     b.Property<int>("Id")
@@ -374,6 +431,25 @@ namespace AssignmentCore.Migrations
                     b.Navigation("CreatedByUser");
                 });
 
+            modelBuilder.Entity("AssignmentCore.Models.AssignmentSubmission", b =>
+                {
+                    b.HasOne("AssignmentCore.Models.Assignment", "Assignment")
+                        .WithMany("Submissions")
+                        .HasForeignKey("AssignmentId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("AssignmentCore.Models.User", "Student")
+                        .WithMany("Submissions")
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Assignment");
+
+                    b.Navigation("Student");
+                });
+
             modelBuilder.Entity("AssignmentCore.Models.Course", b =>
                 {
                     b.HasOne("AssignmentCore.Models.User", "Teacher")
@@ -455,6 +531,11 @@ namespace AssignmentCore.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("AssignmentCore.Models.Assignment", b =>
+                {
+                    b.Navigation("Submissions");
+                });
+
             modelBuilder.Entity("AssignmentCore.Models.Course", b =>
                 {
                     b.Navigation("Assignments");
@@ -469,6 +550,8 @@ namespace AssignmentCore.Migrations
                     b.Navigation("CoursesTaught");
 
                     b.Navigation("EnrolledCourses");
+
+                    b.Navigation("Submissions");
                 });
 #pragma warning restore 612, 618
         }

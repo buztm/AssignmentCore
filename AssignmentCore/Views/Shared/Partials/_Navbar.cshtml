@@ -317,10 +317,10 @@
                     @{
                         var dbUser = await UserManager.GetUserAsync(User);
                         string avatarUrl;
-
+                        
                         if (dbUser == null || string.IsNullOrEmpty(dbUser.ProfileImagePath))
                         {
-                            avatarUrl = Url.Content("~/images/profile/default-avatar.png");
+                            avatarUrl = Url.Content("~/images/profile/default-profile.png");
                         }
                         else
                         {

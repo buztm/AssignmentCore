@@ -1,0 +1,6 @@
+/* Student Courses page tweaks */
+.stu-courses .s-card-top{
+  background:
+    radial-gradient(900px 220px at 18% 0%, rgba(99,102,241,.14), transparent 58%),
+    radial-gradient(700px 200px at 82% 0%, rgba(59,130,246,.10), transparent 60%);
+}

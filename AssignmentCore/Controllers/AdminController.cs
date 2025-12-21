@@ -8,7 +8,7 @@ using System.Security.Claims;
 
 namespace AssignmentCore.Controllers
 {
-    [Authorize]
+    [Authorize(Roles="Admin,Teacher")]
     public class AdminController : Controller
     {
         private readonly CourseRepository _courseRepository;

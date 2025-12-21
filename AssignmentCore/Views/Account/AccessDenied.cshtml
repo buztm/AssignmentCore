@@ -16,9 +16,19 @@
     </p>
 
     <div class="text-center">
-        <a asp-controller="Admin" asp-action="Index"
-           class="btn btn-primary px-32 py-12">
-            Back to Dashboard
-        </a>
+        @if(User.IsInRole("Student"))
+        {
+            <a asp-controller="Student" asp-action="Overview"
+               class="btn btn-primary px-32 py-12">
+                Back to Overview
+            </a>
+        }
+        else
+        {
+            <a asp-controller="Admin" asp-action="Index"
+               class="btn btn-primary px-32 py-12">
+                Back to Dashboard
+            </a>
+        }
     </div>
 </div>

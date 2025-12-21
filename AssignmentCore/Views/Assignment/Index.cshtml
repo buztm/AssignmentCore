@@ -1,7 +1,5 @@
 ﻿@model List<AssignmentCore.Models.Assignment>
-
 @{
-    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
     ViewData["title"] = "Assignments";
     ViewData["subTitle"] = "Assignment List";
 }
@@ -43,7 +41,13 @@
                     {
                         <tr class="border-bottom">
 
-                            <td>@a.Title</td>
+                            <td>
+                                <a class="fw-semibold hover-text-info"
+                                   asp-action="Details" asp-route-id="@a.Id">
+                                    @a.Title
+                                </a>
+                            </td>
+
 
                             <td>
                                 <a class="hover-text-info" href="~/Course">@a.Course.Name</a>
@@ -68,6 +72,11 @@
                             @if (!User.IsInRole("Student"))
                             {
                                 <td class="text-end">
+                                    <a asp-action="Details" asp-route-id="@a.Id"
+                                       class="btn btn-sm btn-outline-info me-1">
+                                        Details
+                                    </a>
+
                                     <a asp-action="Edit" asp-route-id="@a.Id"
                                        class="btn btn-sm btn-outline-primary me-1">
                                         Edit

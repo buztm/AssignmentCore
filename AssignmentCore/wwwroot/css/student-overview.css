@@ -1,0 +1,6 @@
+/* Student Overview page tweaks */
+.stu-overview .s-card-top{
+  background:
+    radial-gradient(900px 220px at 18% 0%, rgba(245,158,11,.14), transparent 58%),
+    radial-gradient(700px 200px at 82% 0%, rgba(99,102,241,.10), transparent 60%);
+}

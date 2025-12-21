@@ -56,6 +56,44 @@ namespace AssignmentCore.Controllers
             return View(courses);
         }
 
+        [Authorize(Roles = "Student")]
+        public async Task<IActionResult> StudentIndex(string? search)
+        {
+            ViewData["title"] = "My Courses";
+            ViewData["subTitle"] = "Your enrolled courses";
+
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var courses = await _courseRepository.GetForStudentAsync(userId);
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                courses = courses.Where(c =>
+                    (c.Name ?? "").Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    (c.Code ?? "").Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    (c.Description ?? "").Contains(search, StringComparison.OrdinalIgnoreCase)
+                ).ToList();
+            }
+
+            return View(courses);
+        }
+
+        [Authorize(Roles = "Student")]
+        public async Task<IActionResult> DetailsStudent(int id)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var course = await _courseRepository.GetByIdWithStudentsAndAssignmentsAsync(id);
+            if (course == null) return NotFound();
+
+            var enrolled = course.Students.Any(s => s.StudentId == userId && s.IsActive);
+            if (!enrolled) return Forbid();
+
+            ViewData["title"] = "Course Details";
+            ViewData["subTitle"] = $"{course.Code} • {course.Name}";
+            return View(course);
+        }
+
         [Authorize(Roles = "Admin,Teacher")]
         public async Task<IActionResult> Create()
         {

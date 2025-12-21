@@ -24,5 +24,8 @@ namespace AssignmentCore.Models
 
 
         public bool IsActive { get; set; } = true;
+
+        public ICollection<AssignmentSubmission> Submissions { get; set; } = new List<AssignmentSubmission>();
+
     }
 }

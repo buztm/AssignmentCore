@@ -34,10 +34,27 @@ namespace AssignmentCore.Data
                 .WithMany(u => u.EnrolledCourses)
                 .HasForeignKey(cs => cs.StudentId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<AssignmentSubmission>()
+                .HasOne(s => s.Assignment)
+                .WithMany(a => a.Submissions)
+                .HasForeignKey(s => s.AssignmentId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<AssignmentSubmission>()
+                .HasOne(s => s.Student)
+                .WithMany(u => u.Submissions)
+                .HasForeignKey(s => s.StudentId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<AssignmentSubmission>()
+                .HasIndex(s => new { s.AssignmentId, s.StudentId })
+                .IsUnique();
         }
 
         public DbSet<Assignment> Assignments { get; set; } = null!;
         public DbSet<Course> Courses { get; set; } = null!;
         public DbSet<CourseStudent> CourseStudents { get; set; } = null!;
+        public DbSet<AssignmentSubmission> AssignmentSubmissions { get; set; } = null!;
     }
 }

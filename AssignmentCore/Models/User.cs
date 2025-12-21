@@ -18,5 +18,7 @@ namespace AssignmentCore.Models
         public ICollection<Course> CoursesTaught { get; set; } = new List<Course>();
 
         public ICollection<CourseStudent> EnrolledCourses { get; set; } = new List<CourseStudent>();
+        public ICollection<AssignmentSubmission> Submissions { get; set; } = new List<AssignmentSubmission>();
+
     }
 }

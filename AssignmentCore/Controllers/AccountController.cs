@@ -67,8 +67,18 @@ namespace AssignmentCore.Controllers
                 if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
                     return Redirect(model.ReturnUrl);
 
-                return RedirectToAction("Index", "Admin");
+                var roles = await _userManager.GetRolesAsync(user);
+                var role = roles.FirstOrDefault();
+
+                return role switch
+                {
+                    "Student" => RedirectToAction("Overview", "Student"),
+                    "Teacher" => RedirectToAction("Index", "Admin"),
+                    "Admin" => RedirectToAction("Index", "Admin"),
+                    _ => RedirectToAction("Index", "Home")
+                };
             }
+
 
             ModelState.AddModelError(string.Empty, "Invalid username or password.");
 

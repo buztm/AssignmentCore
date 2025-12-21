@@ -1,0 +1,62 @@
+﻿@model List<AssignmentCore.Models.AssignmentSubmission>
+
+@{
+    var a = ViewBag.Assignment as AssignmentCore.Models.Assignment;
+}
+
+<div class="card p-24 radius-16 shadow-sm">
+    <div class="d-flex justify-content-between align-items-center mb-12">
+        <div>
+            <h5 class="mb-4">Submissions</h5>
+            <div class="text-secondary-light text-sm">
+                @(a?.Course?.Code) • @(a?.Course?.Name) — @(a?.Title)
+            </div>
+        </div>
+
+        <a class="btn btn-outline-secondary"
+           asp-action="Details" asp-route-id="@(a?.Id)">
+            <i class="ri-arrow-left-line me-1"></i> Back
+        </a>
+    </div>
+
+    @if (Model == null || Model.Count == 0)
+    {
+        <div class="alert alert-light mb-0">No submissions yet.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Submitted At</th>
+                        <th>File</th>
+                        <th class="text-end">Open</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">@s.Student.FullName</div>
+                                <div class="text-secondary-light text-sm">@s.Student.Email</div>
+                            </td>
+                            <td>@s.SubmittedAt.ToString("dd MMM yyyy HH:mm")</td>
+                            <td>
+                                <div class="fw-semibold">@s.OriginalName</div>
+                                <div class="text-secondary-light text-sm">@s.ContentType • @s.Size bytes</div>
+                            </td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-primary" href="@s.FilePath" target="_blank" rel="noopener">
+                                    Open
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
