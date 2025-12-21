@@ -30,3 +30,34 @@ body {
   text-align: start;
 }
 
+.md-content p {
+    margin-bottom: .75rem;
+}
+
+.md-content ul, .md-content ol {
+    padding-left: 1.25rem;
+    margin-bottom: .75rem;
+}
+
+.md-content h1, .md-content h2, .md-content h3 {
+    margin-top: 1rem;
+    margin-bottom: .5rem;
+}
+
+.md-content a {
+    text-decoration: underline;
+    color: dodgerblue;
+}
+
+.md-content code {
+    padding: .1rem .3rem;
+    border-radius: .3rem;
+    background: rgba(0,0,0,.06);
+}
+
+.md-content pre {
+    padding: 1rem;
+    border-radius: .75rem;
+    background: rgba(0,0,0,.06);
+    overflow: auto;
+}

@@ -1,5 +1,6 @@
 @model List<AssignmentCore.Models.Assignment>
 @using AssignmentCore.Models
+@using AssignmentCore.Helpers
 @{
     var subMap = ViewBag.SubmissionMap as Dictionary<int, AssignmentSubmission>;
     int DaysLeft(DateTime? due)
@@ -27,11 +28,19 @@
         return "due-ok";
     }
 
-    string Short(string? s, int max = 120)
+    string ShortHtml(string? s, int max = 120)
     {
         if (string.IsNullOrWhiteSpace(s)) return "No description.";
-        return s.Length > max ? s.Substring(0, max) + "..." : s;
+
+        var text = s.Length > max ? s.Substring(0, max) + "..." : s;
+
+        text = System.Net.WebUtility.HtmlEncode(text);
+
+        text = text.Replace("\r\n", "\n").Replace("\n", "<br>");
+
+        return text;
     }
+
 }
 
 @if (Model == null || Model.Count == 0)
@@ -51,7 +60,7 @@ else
             var isLate = a.DueDate != null && DaysLeft(a.DueDate) < 0;
             var pill = DuePillClass(a.DueDate);
 
-            <div class="col-12 col-md-6 col-xl-4">
+            <div class="col-12 col-md-6 col-xl-6">
                 <div class="card s-card s-assign h-100">
                     <div class="s-card-top d-flex align-items-start justify-content-between gap-2">
                         <div class="d-flex align-items-center gap-3">
@@ -97,8 +106,8 @@ else
                             Due: @(a.DueDate?.ToString("dd MMM yyyy") ?? "—")
                         </div>
 
-                        <div class="s-desc mb-14" title="@a.Description">
-                            @Short(a.Description)
+                        <div class="s-desc mb-14 md-snippet" title="@a.Description">
+                            @Html.Raw(MarkdownHelper.ToSafeHtml(ShortHtml(a.Description)))
                         </div>
 
                         <div class="d-flex align-items-center justify-content-between gap-2">
@@ -118,21 +127,6 @@ else
                             </div>
 
                             <div class="d-flex align-items-center justify-content-between gap-2">
-                                <div class="text-sm">
-                                    @if (!string.IsNullOrWhiteSpace(a.AttachmentPath))
-                                    {
-                                        <span class="text-success">
-                                            <i class="ri-attachment-2 me-1"></i> File attached
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-secondary-light">
-                                            <i class="ri-attachment-off me-1"></i> No file
-                                        </span>
-                                    }
-                                </div>
-
                                 <div class="d-flex gap-2">
                                     @if (isSubmitted && sub != null)
                                     {

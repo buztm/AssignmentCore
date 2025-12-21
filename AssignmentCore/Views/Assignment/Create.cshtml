@@ -49,9 +49,37 @@
 
         <!-- DESCRIPTION -->
         <div class="col-md-12">
-            <label class="form-label fw-semibold">Description</label>
-            <textarea asp-for="Description" class="form-control radius-12" placeholder="Enter description"></textarea>
+            <label class="form-label fw-semibold">
+                Description
+                <span class="text-secondary-light text-sm">(Markdown supported)</span>
+            </label>
+
+            <textarea asp-for="Description"
+                      class="form-control radius-12"
+                      rows="6"
+                      placeholder="You can use Markdown here..."></textarea>
+
+            <div class="mt-2 text-secondary-light text-sm">
+                <strong>Supported:</strong>
+                <code>**bold**</code>,
+                <code>*italic*</code>,
+                <code>- list</code>,
+                <code>`code`</code>,
+                links (<code>https://example.com</code>)
+            </div>
         </div>
+
+        <div class="card mt-3 p-12 radius-12 bg-neutral-50">
+            <div class="fw-semibold mb-6">
+                <i class="ri-eye-line me-1"></i>
+                Live Preview
+            </div>
+
+            <div id="mdPreview" class="md-content text-sm text-secondary-light">
+                Start typing to see preview...
+            </div>
+        </div>
+
 
         <!--DUE DATE-->
         <div class="col-md-12">
@@ -74,6 +102,7 @@
     </form>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
     const fileInput = document.getElementById("attachmentInput");
     const fileNameDiv = document.getElementById("selectedFileName");
@@ -88,5 +117,23 @@
                     </div>`;
             }
         });
+    }
+
+
+      marked.setOptions({
+      breaks: true
+    });
+
+    const descInput = document.querySelector('textarea[name="Description"]');
+    const preview = document.getElementById('mdPreview');
+
+    if (descInput && preview) {
+      const render = () => {
+        const text = descInput.value || "";
+        preview.innerHTML = marked.parse(text);
+      };
+
+      descInput.addEventListener('input', render);
+      render();
     }
 </script>

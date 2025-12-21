@@ -49,7 +49,11 @@
             }
             else
             {
-                <p class="mb-0">@Model.Description</p>
+                @using AssignmentCore.Helpers
+
+                <div class="md-content">
+                    @Html.Raw(MarkdownHelper.ToSafeHtml(Model.Description))
+                </div>
             }
         </div>
 
